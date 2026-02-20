@@ -1,7 +1,7 @@
-import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:http/http.dart' as http;
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
@@ -15,8 +15,7 @@ class ChatbotScreen extends StatefulWidget {
 class _ChatbotScreenState extends State<ChatbotScreen> {
   final List<ChatMessage> _messages = [];
   final TextEditingController _textController = TextEditingController();
-  GenerativeModel? _model;
-  ChatSession? _chat;
+
   bool _isLoading = false;
   bool _isApiConfigured = false;
 
@@ -24,101 +23,88 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   final FlutterTts _flutterTts = FlutterTts();
   bool _isListening = false;
 
+  String? _apiKey;
+
   @override
   void initState() {
     super.initState();
-    _initChatbot();
     _initVoice();
+    _initChatbot();
+  }
+
+  void _initChatbot() {
+    _apiKey = dotenv.env['OPENROUTER_API_KEY'];
+
+    if (_apiKey == null || _apiKey!.isEmpty) {
+      _showError("API Key not found. Check .env file.");
+      _isApiConfigured = false;
+      return;
+    }
+
+    _isApiConfigured = true;
+
+    final welcomeMessage =
+        "Hello! I am Thanal Assistant. I support English and Malayalam.\n\nഹലോ! ഞാൻ തണൽ അസിസ്റ്റന്റാണ്.";
+    _messages.add(ChatMessage(text: welcomeMessage, isUser: false));
+    _speak(welcomeMessage);
   }
 
   Future<void> _initVoice() async {
     await _speechToText.initialize();
-    // BILINGUAL TTS: We no longer set a default language here.
-    // It will be set dynamically before each speech utterance.
     await _flutterTts.setSpeechRate(0.5);
     await _flutterTts.setPitch(1.0);
   }
 
-  void _initChatbot() {
-    // This function remains the same as your previous version.
-    // ... (Your existing _initChatbot code)
-    void showError(String message) {
-      setState(() {
-        _messages.add(ChatMessage(text: message, isUser: false));
-      });
-    }
-
-    try {
-      final apiKey = dotenv.env['GEMINI_API_KEY'];
-      if (apiKey == null || apiKey.isEmpty) {
-        _isApiConfigured = false;
-        showError('API Key കണ്ടെത്തിയില്ല. നിങ്ങളുടെ .env ഫയൽ പരിശോധിക്കുക.');
-        return;
-      }
-
-      _model = GenerativeModel(
-        model: 'gemini-2.0-flash',
-        apiKey: apiKey,
-      );
-
-      _chat = _model!.startChat();
-      _isApiConfigured = true;
-
-       final initialMessage = 'Hello! I can speak English and Malayalam. How can I help you?\n\nഹലോ! എനിക്ക് ഇംഗ്ലീഷും മലയാളവും സംസാരിക്കാൻ കഴിയും. ഞാൻ നിങ്ങളെ എങ്ങനെ സഹായിക്കും?';
-      setState(() {
-        _messages.add(ChatMessage(text: initialMessage, isUser: false));
-      });
-       _speak(initialMessage);
-    } catch (e) {
-      _isApiConfigured = false;
-      showError('ചാറ്റ്ബോട്ട് സജ്ജീകരിക്കുന്നതിൽ പിശക്: ${e.toString()}');
-    }
+  void _showError(String message) {
+    setState(() {
+      _messages.add(ChatMessage(text: message, isUser: false));
+    });
   }
 
-  // BILINGUAL TTS: A new function to detect the language of a string.
   String _detectLanguage(String text) {
-    // The Unicode range for Malayalam characters is 0D00–0D7F.
     const int malayalamStart = 0x0D00;
     const int malayalamEnd = 0x0D7F;
 
-    // Check if any character in the string falls within the Malayalam range.
     for (final rune in text.runes) {
       if (rune >= malayalamStart && rune <= malayalamEnd) {
-        return "ml-IN"; // It's Malayalam
+        return "ml-IN";
       }
     }
-    // If no Malayalam characters were found, default to English.
     return "en-US";
   }
+  String _cleanForSpeech(String text) {
+  return text
+      .replaceAll(RegExp(r'\*\*'), '')
+      .replaceAll(RegExp(r'\*'), '')
+      .replaceAll(RegExp(r'_'), '')
+      .replaceAll(RegExp(r'`'), '')
+      .replaceAll(RegExp(r'#'), '')
+      .replaceAll(RegExp(r'- '), '')
+      .replaceAll(RegExp(r'\d+\.'), '')
+      .replaceAll(RegExp(r'\n+'), '\n')
+      .trim();
+}
 
-  // BILINGUAL TTS: The _speak function is now dynamic.
   Future<void> _speak(String text) async {
-    if (text.isNotEmpty) {
-      // 1. Detect the language of the text.
-      final language = _detectLanguage(text);
-      // 2. Set the TTS engine to that language.
-      await _flutterTts.setLanguage(language);
-      // 3. Speak.
-      await _flutterTts.speak(text);
-    }
+    if (text.isEmpty) return;
+    final cleanedText = _cleanForSpeech(text);  
+    final language = _detectLanguage(text);
+    await _flutterTts.setLanguage(language);   
+    await _flutterTts.speak(text);
   }
 
   void _listen() async {
     if (!_isListening) {
-      bool available = await _speechToText.initialize(
-        onStatus: (status) => print('onStatus: $status'),
-        onError: (error) => print('onError: $error'),
-      );
+      bool available = await _speechToText.initialize();
       if (available) {
         setState(() => _isListening = true);
-        // We can let the STT engine auto-detect or specify a primary locale.
-        // For a bilingual app, letting it auto-detect can sometimes work well.
-        // To prioritize Malayalam, we keep 'ml_IN'.
         _speechToText.listen(
-          onResult: (result) => setState(() {
-            _textController.text = result.recognizedWords;
-          }),
           localeId: 'ml_IN',
+          onResult: (result) {
+            setState(() {
+              _textController.text = result.recognizedWords;
+            });
+          },
         );
       }
     } else {
@@ -128,43 +114,53 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   }
 
   Future<void> _sendMessage(String text) async {
-    // This function remains the same. The magic happens when its response
-    // is passed to our new dynamic _speak() function.
-    // ... (Your existing _sendMessage code)
-     if (text.trim().isEmpty || _isLoading || !_isApiConfigured) return;
+    if (text.trim().isEmpty || _isLoading || !_isApiConfigured) return;
 
     setState(() {
       _messages.add(ChatMessage(text: text, isUser: true));
       _isLoading = true;
     });
+
     _textController.clear();
     _speechToText.stop();
     setState(() => _isListening = false);
 
-
     try {
-      final response = await _chat!.sendMessage(Content.text(text));
-      final botResponse = response.text;
+      final response = await http.post(
+        Uri.parse("https://openrouter.ai/api/v1/chat/completions"),
+        headers: {
+          "Authorization": "Bearer $_apiKey",
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://thanal.app",
+          "X-Title": "Thanal Assistant"
+        },
+        body: jsonEncode({
+         "model": "openai/gpt-4o-mini",
+          "messages": [
+            {
+              "role": "system",
+              "content":
+                  "You are Thanal disaster assistant. Give short, practical answers. Support Malayalam and English."
+            },
+            {"role": "user", "content": text}
+          ]
+        }),
+      );
 
-      if (botResponse != null) {
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final botReply = data["choices"][0]["message"]["content"];
+
         setState(() {
-          _messages.add(ChatMessage(text: botResponse, isUser: false));
+          _messages.add(ChatMessage(text: botReply, isUser: false));
         });
-        _speak(botResponse);
+
+        _speak(botReply);
       } else {
-        final errorMessage = 'ക്ഷമിക്കണം, എനിക്ക് ഉത്തരം കണ്ടെത്താനായില്ല.';
-        setState(() {
-          _messages.add(ChatMessage(text: errorMessage, isUser: false));
-        });
-         _speak(errorMessage);
+        _showError("API Error: ${response.statusCode}");
       }
     } catch (e) {
-      debugPrint('Gemini API error: $e');
-      final errorMessage = '⚠️ ഒരു പിശക് സംഭവിച്ചു.';
-      setState(() {
-        _messages.add(ChatMessage(text: errorMessage, isUser: false));
-      });
-       _speak(errorMessage);
+      _showError("Something went wrong.");
     } finally {
       setState(() {
         _isLoading = false;
@@ -174,35 +170,38 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // The build method remains the same as your previous version.
-    // ... (Your existing build method code)
-     return Scaffold(
+    return Scaffold(
       appBar: AppBar(
-        title: const Text('തണൽ Bilingual Assistant'),
+        title: const Text("Thanal Voice Assistant"),
         backgroundColor: Colors.green[700],
       ),
       body: Column(
         children: [
-           Expanded(
+          Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.all(8),
               reverse: true,
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 final message = _messages.reversed.toList()[index];
                 return Align(
-                  alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
+                  alignment: message.isUser
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
                   child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    margin: const EdgeInsets.all(8),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: message.isUser ? Colors.green[600] : Colors.grey[300],
+                      color: message.isUser
+                          ? Colors.green[600]
+                          : Colors.grey[300],
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
                       message.text,
                       style: TextStyle(
-                        color: message.isUser ? Colors.white : Colors.black87,
+                        color: message.isUser
+                            ? Colors.white
+                            : Colors.black87,
                       ),
                     ),
                   ),
@@ -210,8 +209,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               },
             ),
           ),
+          if (_isLoading) const LinearProgressIndicator(),
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8),
             child: Row(
               children: [
                 Expanded(
@@ -219,32 +219,33 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     controller: _textController,
                     enabled: _isApiConfigured,
                     decoration: InputDecoration(
-                      hintText: _isListening ? 'Listening...' : 'Type or use the mic...',
+                      hintText:
+                          _isListening ? "Listening..." : "Type or speak...",
+                      filled: true,
+                      fillColor: Colors.grey[200],
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
                         borderSide: BorderSide.none,
                       ),
-                      filled: true,
-                      fillColor: Colors.grey[200],
                     ),
                     onSubmitted: _sendMessage,
                   ),
                 ),
-                const SizedBox(width: 4),
                 IconButton(
-                  icon: Icon(_isListening ? Icons.mic_off : Icons.mic),
+                  icon: Icon(
+                      _isListening ? Icons.mic_off : Icons.mic),
+                  onPressed: _listen,
                   color: Colors.green[700],
-                  onPressed: _isApiConfigured ? _listen : null,
                 ),
                 IconButton(
                   icon: const Icon(Icons.send),
+                  onPressed: () =>
+                      _sendMessage(_textController.text),
                   color: Colors.green[700],
-                  onPressed: _isApiConfigured ? () => _sendMessage(_textController.text) : null,
                 ),
               ],
             ),
           ),
-          if (_isLoading) const LinearProgressIndicator(),
         ],
       ),
     );

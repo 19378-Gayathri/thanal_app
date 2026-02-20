@@ -12,9 +12,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _loading = false;
 
-  // Define admin emails here
   final List<String> adminEmails = [
-    'deva1@gmail.com', 
+    'deva1@gmail.com',
   ];
 
   void _login() async {
@@ -31,18 +30,16 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
+      await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
 
-      // Check if the logged-in user is admin
       bool isAdmin = adminEmails.contains(email);
 
-      // Navigate to HomeScreen and pass isAdmin flag
       Navigator.pushReplacementNamed(
         context,
         '/home',
         arguments: isAdmin,
       );
-
     } on FirebaseAuthException catch (e) {
       String message = "Login failed";
       if (e.code == 'user-not-found') message = "User not found";
@@ -59,56 +56,90 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Container(
-          width: 300,
-          padding: EdgeInsets.all(25),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text("Login", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-              SizedBox(height: 20),
+      body: Stack(
+        children: [
+          /// 🔹 Background Image
+          Positioned.fill(
+            child: Image.asset(
+              "assets/login_bg.jpg",
+              fit: BoxFit.cover,
+            ),
+          ),
 
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(labelText: "Email", border: OutlineInputBorder()),
-                keyboardType: TextInputType.emailAddress,
+          /// 🔹 Dark Overlay (improves readability)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.5),
+            ),
+          ),
+
+          /// 🔹 Login Form
+          Center(
+            child: Container(
+              width: 320,
+              padding: EdgeInsets.all(25),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.9),
+                borderRadius: BorderRadius.circular(15),
               ),
-              SizedBox(height: 10),
-
-              TextField(
-                controller: _passwordController,
-                decoration: InputDecoration(labelText: "Password", border: OutlineInputBorder()),
-                obscureText: true,
-              ),
-              SizedBox(height: 15),
-
-              _loading
-                  ? CircularProgressIndicator()
-                  : SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _login,
-                        child: Text("Login"),
-                      ),
-                    ),
-
-              SizedBox(height: 10),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text("Don't have an account? "),
-                  TextButton(
-                    onPressed: () => Navigator.pushNamed(context, '/signup'),
-                    child: Text("Register"),
-                  
+                  Text(
+                    "Login",
+                    style: TextStyle(
+                        fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 20),
+
+                  TextField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      labelText: "Email",
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  SizedBox(height: 10),
+
+                  TextField(
+                    controller: _passwordController,
+                    decoration: InputDecoration(
+                      labelText: "Password",
+                      border: OutlineInputBorder(),
+                    ),
+                    obscureText: true,
+                  ),
+                  SizedBox(height: 15),
+
+                  _loading
+                      ? CircularProgressIndicator()
+                      : SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _login,
+                            child: Text("Login"),
+                          ),
+                        ),
+
+                  SizedBox(height: 10),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text("Don't have an account? "),
+                      TextButton(
+                        onPressed: () =>
+                            Navigator.pushNamed(context, '/signup'),
+                        child: Text("Register"),
+                      )
+                    ],
                   )
                 ],
-              )
-            ],
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

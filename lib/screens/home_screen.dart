@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Required for date formatting
-
+import 'LiveMapScreen.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -10,14 +9,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool elderMode = false;
-  bool isAdmin = false; // Based on your previous code, this would come from arguments
+  bool isAdmin = false;
   bool _isAdminLoaded = false;
 
-  // Define the consistent green color palette
-  final Color _baseGreenBackground = const Color(0xFFEEF7EE); // Light background green
-  final Color _greenAccent = const Color(0xFF4CAF50); // A brighter green for icons/accents
-  final Color _darkGreenText = const Color(0xFF388E3C); // Darker green for main text
-  final Color _lightGreyText = const Color(0xFF616161); // For secondary text like date
+  final Color _baseGreenBackground = const Color(0xFFEEF7EE);
+  final Color _greenAccent = const Color(0xFF4CAF50);
+  final Color _darkGreenText = const Color(0xFF2E7D32);
 
   @override
   void didChangeDependencies() {
@@ -37,184 +34,200 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Determine font and icon sizes based on elderMode
-    // Base sizes for "normal" mode
-    final double baseThanalFontSize = 28;
-    final double baseDateFontSize = 16;
-    final double baseCardFontSize = 12;
-    final double baseCardIconSize = 24;
+    final double baseCardFontSize = 16;
+    final double baseCardIconSize = 32;
+    final double elderModeScaleFactor = 1.8;
 
-    // Scaling factors for Elder Mode
-    final double elderModeScaleFactor = 1.3; // Increase font/icon sizes by 30% in Elder Mode
-
-    // Calculate actual sizes based on elderMode state
-    final double thanalFontSize = elderMode ? baseThanalFontSize * elderModeScaleFactor : baseThanalFontSize;
-    final double dateFontSize = elderMode ? baseDateFontSize * elderModeScaleFactor : baseDateFontSize;
-    final double cardFontSize = elderMode ? baseCardFontSize * elderModeScaleFactor : baseCardFontSize;
-    final double cardIconSize = elderMode ? baseCardIconSize * elderModeScaleFactor : baseCardIconSize;
-    // The 'Elder Mode' label itself will keep its specific larger size for prominence as a toggle.
-
-    // Get current date for display (Current time is Friday, July 25, 2025)
-    final DateTime now = DateTime(2025, 7, 25); // Hardcoded for consistency with screenshot
-    final String formattedDate = DateFormat('EEEE, dd MMMM').format(now);
+    final double cardFontSize =
+        elderMode ? baseCardFontSize * elderModeScaleFactor : baseCardFontSize;
+    final double cardIconSize =
+        elderMode ? baseCardIconSize * elderModeScaleFactor : baseCardIconSize;
 
     return Scaffold(
-      backgroundColor: _baseGreenBackground, // Apply the light green background
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // --- START Thanal title font size change ---
-                      Text(
-                        'Thanal',
-                        style: TextStyle(
-                          fontSize: thanalFontSize, // Now scales with elderMode
-                          fontWeight: FontWeight.bold,
-                          color: _darkGreenText,
-                        ),
-                      ),
-                      // --- END Thanal title font size change ---
-                      // --- START Date font size change ---
-                      Text(
-                        formattedDate, // Display formatted date
-                        style: TextStyle(
-                          fontSize: dateFontSize, // Now scales with elderMode
-                          color: _lightGreyText,
-                        ),
-                      ),
-                      // --- END Date font size change ---
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      // 'Elder Mode' label itself kept at fixed large size for prominence
-                      Text(
-                        'Elder Mode',
-                        style: TextStyle(
-                          fontSize: 18, // Remains fixed for the toggle label itself
-                          fontWeight: FontWeight.bold,
-                          color: _lightGreyText,
-                        ),
-                      ),
-                      Switch(
-                        value: elderMode,
-                        onChanged: (value) {
-                          setState(() {
-                            elderMode = value;
-                          });
-                        },
-                        activeColor: _greenAccent, // Green color when active
-                        inactiveThumbColor: Colors.grey,
-                        inactiveTrackColor: Colors.grey.withOpacity(0.5),
-                      ),
-                    ],
-                  ),
-                ],
+      body: Stack(
+        children: [
+          // Background Image (UNCHANGED)
+          Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/background.jpeg'),
+                fit: BoxFit.cover,
               ),
             ),
-            Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.all(16), // Padding around the grid
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4, // Changed to 4 items per row
-                  crossAxisSpacing: 10, // Reduced spacing between columns
-                  mainAxisSpacing: 10, // Reduced spacing between rows
-                  childAspectRatio: 0.85, // Adjusted ratio for a more compact card
+          ),
+
+          SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Heading
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'Thanal - A Hand to Hold in Every Crisis',
+                    style: TextStyle(
+                      fontSize: elderMode ? 34 : 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green.shade900, // Changed to black
+                    ),
+                  ),
                 ),
-                itemCount: _getDashboardItems().length,
-                itemBuilder: (context, index) {
-                  final item = _getDashboardItems()[index];
-                  return _buildDashboardCard(
-                    icon: item['icon'] as IconData,
-                    label: item['label'] as String,
-                    onTap: item['onTap'] as VoidCallback,
-                    iconColor: _greenAccent, // All icons are green
-                    textColor: _darkGreenText, // All text is dark green
-                    cardFontSize: cardFontSize, // Passed the scaled font size
-                    cardIconSize: cardIconSize, // Passed the scaled icon size
-                    showBadge: item['showBadge'] as bool? ?? false,
-                    badgeText: item['badgeText'] as String? ?? '',
-                  );
-                },
-              ),
+
+Padding(
+  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween, // 👈 pushes to right
+    children: [
+      const SizedBox(), // empty space on left
+      Row(
+        children: [
+          Text(
+            'Elder Mode',
+            style: TextStyle(
+              fontSize: elderMode ? 20 : 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(width: 8),
+          Transform.scale(
+            scale: elderMode ? 1.5 : 1.2,
+            child: Switch(
+              value: elderMode,
+              onChanged: (value) {
+                setState(() {
+                  elderMode = value;
+                });
+              },
+              activeColor: _greenAccent,
+            ),
+          ),
+        ],
+      ),
+    ],
+  ),
+),
+
+                // Dashboard Grid
+                Expanded(
+                  child: GridView.builder(
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 1,
+                    ),
+                    itemCount: _getDashboardItems().length,
+                    itemBuilder: (context, index) {
+                      final item = _getDashboardItems()[index];
+                      return _buildDashboardCard(
+                        icon: item['icon'] as IconData,
+                        label: item['label'] as String,
+                        onTap: item['onTap'] as VoidCallback,
+                        iconColor: _greenAccent,
+                        textColor: _darkGreenText,
+                        cardFontSize: cardFontSize,
+                        cardIconSize: cardIconSize,
+                        showBadge:
+                            item['showBadge'] as bool? ?? false,
+                        badgeText:
+                            item['badgeText'] as String? ?? '',
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  // Helper method to define dashboard items and their properties
-  List<Map<String, dynamic>> _getDashboardItems() {
-    final List<Map<String, dynamic>> items = [
-      {
-        'icon': Icons.lightbulb_outline, // Matches image
-        'label': 'Live Alerts',
-        'onTap': () => Navigator.pushNamed(context, '/alert'),
-        'showBadge': true,
-        'badgeText': 'Urgent',
-      },
-      {
-        'icon': Icons.checklist_rtl, // Matches image
-        'label': 'Checklist Access',
-        'onTap': () => Navigator.pushNamed(context, '/checklist'),
-      },
-      {
-        'icon': Icons.people_outline, // Matches image
-        'label': 'Emergency Contacts',
-        'onTap': () => Navigator.pushNamed(context, '/emergency_contacts'),
-      },
-      {
-        'icon': Icons.health_and_safety_outlined, // Matches image
-        'label': 'First Aid Guide',
-        'onTap': () => Navigator.pushNamed(context, '/first-aid'),
-      },
-      {
-        'icon': Icons.chat_bubble_outline, // Matches image
-        'label': 'Thanal Chatbot',
-        'onTap': () => Navigator.pushNamed(context, '/chatbot'),
-      },
-      {
-        'icon': Icons.edit_note, // Matches image
-        'label': 'Report Incident',
-        'onTap': () => Navigator.pushNamed(context, '/report'),
-      },
-      {
-        'icon': Icons.dashboard_outlined, // Matches image
-        'label': 'Incident Dashboard',
-        'onTap': () => Navigator.pushNamed(context, '/incidentDashboard'),
-      },
-      {
-        'icon': Icons.person_add_alt_1_outlined, // Matches image
-        'label': 'Volunteer Registration',
-        'onTap': () => Navigator.pushNamed(context, '/volunteer'),
-      },
-      {
-        'icon': Icons.format_list_bulleted_add, // Matches image
-        'label': 'Volunteer Dashboard',
-        'onTap': () => Navigator.pushNamed(context, '/volunteer_dashboard'),
-      },
-      // Removed: Donation Ledger, Add Donation, Voice Assistant
-    ];
+List<Map<String, dynamic>> _getDashboardItems() {
+  final List<Map<String, dynamic>> items = [
+    {
+      'icon': Icons.lightbulb_outline,
+      'label': 'Live Alerts',
+      'onTap': () => Navigator.pushNamed(context, '/alert'),
+    },
+    {
+      'icon': Icons.checklist_rtl,
+      'label': 'Checklist Access',
+      'onTap': () => Navigator.pushNamed(context, '/checklist'),
+    },
+    {
+      'icon': Icons.people_outline,
+      'label': 'Emergency Contacts',
+      'onTap': () =>
+          Navigator.pushNamed(context, '/emergency_contacts'),
+    },
+    {
+      'icon': Icons.health_and_safety_outlined,
+      'label': 'First Aid Guide',
+      'onTap': () => Navigator.pushNamed(context, '/first-aid'),
+    },
+    {
+      'icon': Icons.chat_bubble_outline,
+      'label': 'Thanal Chatbot',
+      'onTap': () => Navigator.pushNamed(context, '/chatbot'),
+    },
+    {
+      'icon': Icons.edit_note,
+      'label': 'Report Incident',
+      'onTap': () => Navigator.pushNamed(context, '/report'),
+    },
+    {
+      'icon': Icons.dashboard_outlined,
+      'label': 'Incident Dashboard',
+      'onTap': () =>
+          Navigator.pushNamed(context, '/incidentDashboard'),
+    },
+    {
+      'icon': Icons.person_add_alt_1_outlined,
+      'label': 'Volunteer Registration',
+      'onTap': () => Navigator.pushNamed(context, '/volunteer'),
+    },
 
-    if (isAdmin) {
-      items.add({
-        'icon': Icons.admin_panel_settings_outlined, // Matches image
-        'label': 'Admin Panel',
-        'onTap': () => Navigator.pushNamed(context, '/admin'),
-      });
-    }
-    return items;
+    // 🔹 NEW: View Donation Requests
+    {
+      'icon': Icons.volunteer_activism,
+      'label': 'Donations',
+      'onTap': () =>
+          Navigator.pushNamed(context, '/donation-requests'),
+    },
+
+    // 🔹 NEW: Create Donation Request
+    {
+      'icon': Icons.add_circle_outline,
+      'label': 'Request Help',
+      'onTap': () =>
+          Navigator.pushNamed(context, '/create-request'),
+    },
+    {
+  'icon': Icons.location_on_outlined,
+  'label': 'Live Location',
+  'onTap': () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => LiveMapScreen(),
+        ),
+      ),
+},
+  ];
+
+  if (isAdmin) {
+    items.add({
+      'icon': Icons.admin_panel_settings_outlined,
+      'label': 'Admin Panel',
+      'onTap': () => Navigator.pushNamed(context, '/admin'),
+    });
   }
+
+  return items;
+}
 
   Widget _buildDashboardCard({
     required IconData icon,
@@ -222,62 +235,57 @@ class _HomeScreenState extends State<HomeScreen> {
     required VoidCallback onTap,
     required Color iconColor,
     required Color textColor,
-    required double cardFontSize, // Now dynamic
-    required double cardIconSize, // Now dynamic
+    required double cardFontSize,
+    required double cardIconSize,
     bool showBadge = false,
     String badgeText = '',
   }) {
     return Card(
-      color: Colors.white, // Card background is white
-      elevation: 0, // No shadow for the cards
+      color: const Color(0xFFDFF5E1), // Light green card
+      elevation: 6,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+          borderRadius: BorderRadius.circular(16)),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
         onTap: onTap,
-        splashColor: _greenAccent.withOpacity(0.1), // Subtle green splash
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(6.0), // Further reduced padding
-          child: Stack(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(icon, size: cardIconSize, color: iconColor), // Uses dynamic size
-                    const SizedBox(height: 4), // Reduced spacing
-                    Text(
-                      label,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: cardFontSize, // Uses dynamic size
-                        fontWeight: FontWeight.w600,
-                        color: textColor,
-                      ),
-                      maxLines: 2, // Allow label to wrap for smaller cards
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+              Icon(icon,
+                  size: cardIconSize,
+                  color: iconColor),
+              const SizedBox(height: 10),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: cardFontSize,
+                  color: textColor,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               if (showBadge)
-                Positioned(
-                  right: 0, // Align to top right
-                  top: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1), // Smaller badge padding
-                    decoration: BoxDecoration(
-                      color: Colors.redAccent, // Red for urgent badge
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      badgeText,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 8, // Even smaller font for badge
-                        fontWeight: FontWeight.bold,
-                      ),
+                Container(
+                  margin:
+                      const EdgeInsets.only(top: 6),
+                  padding:
+                      const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius:
+                        BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    badgeText,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight:
+                          FontWeight.bold,
                     ),
                   ),
                 ),

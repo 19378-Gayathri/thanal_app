@@ -26,7 +26,9 @@ import 'screens/report_incident_screen.dart';
 import 'screens/chatbotscreen.dart';
 import 'screens/donation_form_screen.dart';
 import 'screens/incident_dashboard_screen.dart';
-
+import 'screens/donation/create_request_screen.dart';
+import 'screens/donation/donation_list_screen.dart';
+import 'screens/donation/donate_screen.dart';
 Future<void> main() async {
   // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
@@ -96,6 +98,8 @@ class ThanalApp extends StatelessWidget {
         '/report': (context) => const ReportIncidentScreen(),
         '/chatbot': (context) => ChatbotScreen(),
         '/incidentDashboard': (context) => const IncidentDashboardScreen(),
+        '/create-request': (context) => const CreateRequestScreen(),
+        '/donation-requests': (context) => const DonationListScreen(),
       },
     );
   }

@@ -1,159 +1,194 @@
-// lib/screens/alert_screen.dart
-
-import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'package:geolocator/geolocator.dart';
 import 'package:intl/intl.dart';
-import '/services/alert_services.dart';
-// Import everything from our single, combined model file
-import '/models/alert_model.dart'; 
 
 class AlertScreen extends StatefulWidget {
-  const AlertScreen({super.key});
+  const AlertScreen({Key? key}) : super(key: key);
 
   @override
   State<AlertScreen> createState() => _AlertScreenState();
 }
 
 class _AlertScreenState extends State<AlertScreen> {
-  bool _isLoading = true;
-  // --- UPDATED: A single state variable for all our data ---
-  ScreenData? _screenData; 
-  final AlertService _alertService = AlertService();
-
-  String _selectedCity = 'Kerala';
-  final List<String> _cities = [
-    'Kerala', 'Kochi', 'Trivandrum', 'Kozhikode', 'Thrissur', 'Kannur',
-  ];
+  bool isLoading = true;
+  Map<String, dynamic>? weatherData;
+  List<dynamic> alerts = [];
+  String locationName = "";
 
   @override
   void initState() {
     super.initState();
-    _fetchScreenData();
+    fetchAllData();
   }
 
-  Future<void> _fetchScreenData() async {
-    setState(() {
-      _isLoading = true;
-    });
-    
-    final fetchedData = await _alertService.fetchScreenData(cityName: _selectedCity);
-    
-    if (mounted) {
-      setState(() {
-        // --- UPDATED: Update the single state object ---
-        _screenData = fetchedData; 
-        _isLoading = false;
-      });
+  Future<void> fetchAllData() async {
+    setState(() => isLoading = true);
+
+    try {
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+
+      String location = "${position.latitude},${position.longitude}";
+      String apiKey = dotenv.env['WEATHER_API_KEY'] ?? "";
+
+      final response = await http.get(Uri.parse(
+          "https://api.weatherapi.com/v1/forecast.json?key=$apiKey&q=$location&days=3&alerts=yes"));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        setState(() {
+          weatherData = data;
+          alerts = data["alerts"]["alert"] ?? [];
+          locationName = data["location"]["name"];
+          isLoading = false;
+        });
+      } else {
+        setState(() => isLoading = false);
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
     }
   }
-  
+
+  Color getSeverityColor(String severity) {
+    switch (severity.toLowerCase()) {
+      case "severe":
+        return Colors.red;
+      case "moderate":
+        return Colors.orange;
+      case "minor":
+        return Colors.yellow.shade700;
+      default:
+        return Colors.green;
+    }
+  }
+
+  IconData getDisasterIcon(String text) {
+    text = text.toLowerCase();
+    if (text.contains("flood")) return Icons.flood;
+    if (text.contains("storm")) return Icons.thunderstorm;
+    if (text.contains("cyclone")) return Icons.cyclone;
+    if (text.contains("landslide")) return Icons.terrain;
+    return Icons.warning_amber_rounded;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kerala News & Weather'),
+        title: const Text(" Thanal Live Alerts"),
+        backgroundColor: Colors.red.shade700,
         actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: DropdownButton<String>(
-              value: _selectedCity,
-              icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
-              dropdownColor: Colors.teal.shade700,
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-              underline: Container(),
-              onChanged: (String? newValue) {
-                if (newValue != null) {
-                  setState(() => _selectedCity = newValue);
-                  _fetchScreenData();
-                }
-              },
-              items: _cities.map((value) => DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              )).toList(),
-            ),
-          ),
+          IconButton(
+              onPressed: fetchAllData,
+              icon: const Icon(Icons.refresh))
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: _fetchScreenData,
-        child: _isLoading
+        onRefresh: fetchAllData,
+        child: isLoading
             ? const Center(child: CircularProgressIndicator())
-            : Column(
+            : ListView(
+                padding: const EdgeInsets.all(12),
                 children: [
-                  // --- UPDATED: Check for weather data inside the ScreenData object ---
-                  if (_screenData?.weather != null) _buildWeatherCard(_screenData!.weather!),
 
-                  Expanded(child: _buildAlertList()), 
+                  /// 📍 LOCATION
+                  Text("📍 $locationName",
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold)),
+
+                  const SizedBox(height: 10),
+
+                  /// 🌤 CURRENT WEATHER
+                  if (weatherData != null)
+                    Card(
+                      elevation: 4,
+                      child: ListTile(
+                        leading: Image.network(
+                          "https:${weatherData!["current"]["condition"]["icon"]}",
+                          width: 50,
+                        ),
+                        title: Text(
+                            "${weatherData!["current"]["temp_c"]}°C - ${weatherData!["current"]["condition"]["text"]}"),
+                        subtitle: Text(
+                            "Humidity: ${weatherData!["current"]["humidity"]}% | Wind: ${weatherData!["current"]["wind_kph"]} kph"),
+                      ),
+                    ),
+
+                  const SizedBox(height: 15),
+
+                  /// 🚨 ALERTS SECTION
+                  const Text("🚨 Active Disaster Alerts",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+
+                  const SizedBox(height: 10),
+
+                  if (alerts.isEmpty)
+                    const Text("No active disaster alerts in your area."),
+                  
+                  ...alerts.map((alert) {
+                    String severity = alert["severity"] ?? "Moderate";
+
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 6),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border(
+                            left: BorderSide(
+                              width: 6,
+                              color: getSeverityColor(severity),
+                            ),
+                          ),
+                        ),
+                        child: ListTile(
+                          leading: Icon(
+                            getDisasterIcon(alert["headline"] ?? ""),
+                            size: 35,
+                            color: getSeverityColor(severity),
+                          ),
+                          title: Text(alert["headline"] ?? ""),
+                          subtitle: Text(
+                              "${alert["desc"] ?? ""}\n\nExpires: ${alert["expires"] ?? ""}"),
+                        ),
+                      ),
+                    );
+                  }),
+
+                  const SizedBox(height: 20),
+
+                  /// 📅 FORECAST SECTION
+                  const Text("📅 3-Day Forecast",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+
+                  const SizedBox(height: 10),
+
+                  if (weatherData != null)
+                    ...weatherData!["forecast"]["forecastday"]
+                        .map<Widget>((day) {
+                      return Card(
+                        child: ListTile(
+                          leading: Image.network(
+                            "https:${day["day"]["condition"]["icon"]}",
+                            width: 40,
+                          ),
+                          title: Text(DateFormat.yMMMd()
+                              .format(DateTime.parse(day["date"]))),
+                          subtitle: Text(
+                              "Max: ${day["day"]["maxtemp_c"]}°C | Min: ${day["day"]["mintemp_c"]}°C\n${day["day"]["condition"]["text"]}"),
+                        ),
+                      );
+                    }).toList(),
                 ],
               ),
       ),
-    );
-  }
-
-  Widget _buildWeatherCard(WeatherInfo weather) {
-    // This widget's code does not need to change
-    return Card(
-      margin: const EdgeInsets.all(10),
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(weather.cityName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text(weather.description.split(' ').map((w) => '${w[0].toUpperCase()}${w.substring(1)}').join(' '), style: const TextStyle(fontSize: 16, color: Colors.black54)),
-              ],
-            ),
-            Row(
-              children: [
-                Image.network('https://openweathermap.org/img/wn/${weather.iconCode}@2x.png', width: 50, height: 50),
-                Text('${weather.temperature.round()}°C', style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w300)),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAlertList() {
-    // --- UPDATED: Check for news data inside the ScreenData object ---
-    if (_screenData == null || _screenData!.alerts.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            'No recent news found for $_selectedCity. Pull down to refresh.',
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 18),
-          ),
-        ),
-      );
-    }
-    
-    final alerts = _screenData!.alerts;
-    return ListView.builder(
-      padding: const EdgeInsets.only(top: 0), 
-      itemCount: alerts.length,
-      itemBuilder: (context, index) {
-        final alert = alerts[index];
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          elevation: 2,
-          child: ListTile(
-            leading: Icon(Icons.article, size: 40, color: Colors.teal.shade700),
-            title: Text(alert.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text('${alert.description}\n${DateFormat.yMMMd().add_jm().format(alert.timestamp)}'),
-            isThreeLine: true,
-          ),
-        );
-      },
     );
   }
 }
