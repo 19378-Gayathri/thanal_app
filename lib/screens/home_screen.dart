@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // Required for date formatting
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -9,8 +10,14 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   bool elderMode = false;
-  bool isAdmin = false;
+  bool isAdmin = false; // Based on your previous code, this would come from arguments
   bool _isAdminLoaded = false;
+
+  // Define the consistent green color palette
+  final Color _baseGreenBackground = const Color(0xFFEEF7EE); // Light background green
+  final Color _greenAccent = const Color(0xFF4CAF50); // A brighter green for icons/accents
+  final Color _darkGreenText = const Color(0xFF388E3C); // Darker green for main text
+  final Color _lightGreyText = const Color(0xFF616161); // For secondary text like date
 
   @override
   void didChangeDependencies() {
@@ -30,197 +37,245 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final double fontSize = elderMode ? 14 : 12;
-    final double iconSize = elderMode ? 26 : 20;
+    // Determine font and icon sizes based on elderMode
+    // Base sizes for "normal" mode
+    final double baseThanalFontSize = 28;
+    final double baseDateFontSize = 16;
+    final double baseCardFontSize = 12;
+    final double baseCardIconSize = 24;
+
+    // Scaling factors for Elder Mode
+    final double elderModeScaleFactor = 1.3; // Increase font/icon sizes by 30% in Elder Mode
+
+    // Calculate actual sizes based on elderMode state
+    final double thanalFontSize = elderMode ? baseThanalFontSize * elderModeScaleFactor : baseThanalFontSize;
+    final double dateFontSize = elderMode ? baseDateFontSize * elderModeScaleFactor : baseDateFontSize;
+    final double cardFontSize = elderMode ? baseCardFontSize * elderModeScaleFactor : baseCardFontSize;
+    final double cardIconSize = elderMode ? baseCardIconSize * elderModeScaleFactor : baseCardIconSize;
+    // The 'Elder Mode' label itself will keep its specific larger size for prominence as a toggle.
+
+    // Get current date for display (Current time is Friday, July 25, 2025)
+    final DateTime now = DateTime(2025, 7, 25); // Hardcoded for consistency with screenshot
+    final String formattedDate = DateFormat('EEEE, dd MMMM').format(now);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Thanal Dashboard', style: TextStyle(fontSize: fontSize)),
-        actions: [
-          Row(
-            children: [
-              Text('Elder Mode', style: TextStyle(fontSize: fontSize * 0.8)),
-              Switch(
-                value: elderMode,
-                onChanged: (value) {
-                  setState(() {
-                    elderMode = value;
-                  });
+      backgroundColor: _baseGreenBackground, // Apply the light green background
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // --- START Thanal title font size change ---
+                      Text(
+                        'Thanal',
+                        style: TextStyle(
+                          fontSize: thanalFontSize, // Now scales with elderMode
+                          fontWeight: FontWeight.bold,
+                          color: _darkGreenText,
+                        ),
+                      ),
+                      // --- END Thanal title font size change ---
+                      // --- START Date font size change ---
+                      Text(
+                        formattedDate, // Display formatted date
+                        style: TextStyle(
+                          fontSize: dateFontSize, // Now scales with elderMode
+                          color: _lightGreyText,
+                        ),
+                      ),
+                      // --- END Date font size change ---
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      // 'Elder Mode' label itself kept at fixed large size for prominence
+                      Text(
+                        'Elder Mode',
+                        style: TextStyle(
+                          fontSize: 18, // Remains fixed for the toggle label itself
+                          fontWeight: FontWeight.bold,
+                          color: _lightGreyText,
+                        ),
+                      ),
+                      Switch(
+                        value: elderMode,
+                        onChanged: (value) {
+                          setState(() {
+                            elderMode = value;
+                          });
+                        },
+                        activeColor: _greenAccent, // Green color when active
+                        inactiveThumbColor: Colors.grey,
+                        inactiveTrackColor: Colors.grey.withOpacity(0.5),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.all(16), // Padding around the grid
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4, // Changed to 4 items per row
+                  crossAxisSpacing: 10, // Reduced spacing between columns
+                  mainAxisSpacing: 10, // Reduced spacing between rows
+                  childAspectRatio: 0.85, // Adjusted ratio for a more compact card
+                ),
+                itemCount: _getDashboardItems().length,
+                itemBuilder: (context, index) {
+                  final item = _getDashboardItems()[index];
+                  return _buildDashboardCard(
+                    icon: item['icon'] as IconData,
+                    label: item['label'] as String,
+                    onTap: item['onTap'] as VoidCallback,
+                    iconColor: _greenAccent, // All icons are green
+                    textColor: _darkGreenText, // All text is dark green
+                    cardFontSize: cardFontSize, // Passed the scaled font size
+                    cardIconSize: cardIconSize, // Passed the scaled icon size
+                    showBadge: item['showBadge'] as bool? ?? false,
+                    badgeText: item['badgeText'] as String? ?? '',
+                  );
                 },
               ),
-            ],
-          ),
-        ],
-      ),
-      body: GridView.extent(
-        maxCrossAxisExtent: 250, // Moderate size for boxes
-        padding: const EdgeInsets.all(12),
-        crossAxisSpacing: 15,
-        mainAxisSpacing: 15,
-        children: [
-          buildCard(
-            icon: Icons.warning,
-            label: 'Live Alerts',
-            fontSize: fontSize,
-            iconSize: iconSize,
-            onTap: () => Navigator.pushNamed(context, '/alert'),
-            borderColor: Colors.redAccent,
-            showBadge: true,
-            badgeText: 'Urgent',
-          ),
-          buildCard(
-            icon: Icons.checklist,
-            label: 'Checklist Access',
-            fontSize: fontSize,
-            iconSize: iconSize,
-            onTap: () => Navigator.pushNamed(context, '/checklist'),
-            borderColor: Colors.blueAccent,
-          ),
-          buildCard(
-            icon: Icons.phone_in_talk,
-            label: 'Emergency Contacts',
-            fontSize: fontSize,
-            iconSize: iconSize,
-            onTap: () => Navigator.pushNamed(context, '/emergency_contacts'),
-            borderColor: Colors.orangeAccent,
-          ),
-          buildCard(
-            icon: Icons.medical_services,
-            label: 'First Aid',
-            fontSize: fontSize,
-            iconSize: iconSize,
-            onTap: () => Navigator.pushNamed(context, '/first-aid'),
-            borderColor: Colors.green,
-          ),
-          buildCard(
-            icon: Icons.chat,
-            label: 'Chatbot',
-            fontSize: fontSize,
-            iconSize: iconSize,
-            onTap: () => Navigator.pushNamed(context, '/chatbot'),
-            borderColor: Colors.teal,
-          ),
-          buildCard(
-            icon: Icons.report,
-            label: 'Report Incident',
-            fontSize: fontSize,
-            iconSize: iconSize,
-            onTap: () => Navigator.pushNamed(context, '/report'),
-            borderColor: Colors.deepOrange,
-          ),
-          buildCard(
-            icon: Icons.how_to_reg,
-            label: 'Volunteer Registration',
-            fontSize: fontSize,
-            iconSize: iconSize,
-            onTap: () => Navigator.pushNamed(context, '/volunteer'),
-            borderColor: Colors.purple,
-          ),
-          buildCard(
-            icon: Icons.help_outline,
-            label: 'View Donation Ledger',
-            fontSize: fontSize,
-            iconSize: iconSize,
-            onTap: () => Navigator.pushNamed(context, '/donation-ledger'),
-            borderColor: Colors.indigo,
-          ),
-          buildCard(
-            icon: Icons.add_circle_outline,
-            label: 'Add Donation',
-            fontSize: fontSize,
-            iconSize: iconSize,
-            onTap: () => Navigator.pushNamed(context, '/donation-form'),
-            borderColor: Colors.indigo,
-          ),
-          buildCard(
-            icon: Icons.dashboard_customize,
-            label: 'Volunteer Dashboard',
-            fontSize: fontSize,
-            iconSize: iconSize,
-            onTap: () => Navigator.pushNamed(context, '/volunteer_dashboard'),
-            borderColor: Colors.blueGrey,
-          ),
-          buildCard(
-            icon: Icons.mic,
-            label: 'Voice Assistant',
-            fontSize: fontSize,
-            iconSize: iconSize,
-            onTap: () => Navigator.pushNamed(context, '/voice'),
-            borderColor: Colors.blue,
-          ),
-          if (isAdmin)
-            buildCard(
-              icon: Icons.admin_panel_settings,
-              label: 'Admin Panel',
-              fontSize: fontSize,
-              iconSize: iconSize,
-              onTap: () => Navigator.pushNamed(context, '/admin'),
-              borderColor: Colors.red[900]!,
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget buildCard({
+  // Helper method to define dashboard items and their properties
+  List<Map<String, dynamic>> _getDashboardItems() {
+    final List<Map<String, dynamic>> items = [
+      {
+        'icon': Icons.lightbulb_outline, // Matches image
+        'label': 'Live Alerts',
+        'onTap': () => Navigator.pushNamed(context, '/alert'),
+        'showBadge': true,
+        'badgeText': 'Urgent',
+      },
+      {
+        'icon': Icons.checklist_rtl, // Matches image
+        'label': 'Checklist Access',
+        'onTap': () => Navigator.pushNamed(context, '/checklist'),
+      },
+      {
+        'icon': Icons.people_outline, // Matches image
+        'label': 'Emergency Contacts',
+        'onTap': () => Navigator.pushNamed(context, '/emergency_contacts'),
+      },
+      {
+        'icon': Icons.health_and_safety_outlined, // Matches image
+        'label': 'First Aid Guide',
+        'onTap': () => Navigator.pushNamed(context, '/first-aid'),
+      },
+      {
+        'icon': Icons.chat_bubble_outline, // Matches image
+        'label': 'Thanal Chatbot',
+        'onTap': () => Navigator.pushNamed(context, '/chatbot'),
+      },
+      {
+        'icon': Icons.edit_note, // Matches image
+        'label': 'Report Incident',
+        'onTap': () => Navigator.pushNamed(context, '/report'),
+      },
+      {
+        'icon': Icons.dashboard_outlined, // Matches image
+        'label': 'Incident Dashboard',
+        'onTap': () => Navigator.pushNamed(context, '/incidentDashboard'),
+      },
+      {
+        'icon': Icons.person_add_alt_1_outlined, // Matches image
+        'label': 'Volunteer Registration',
+        'onTap': () => Navigator.pushNamed(context, '/volunteer'),
+      },
+      {
+        'icon': Icons.format_list_bulleted_add, // Matches image
+        'label': 'Volunteer Dashboard',
+        'onTap': () => Navigator.pushNamed(context, '/volunteer_dashboard'),
+      },
+      // Removed: Donation Ledger, Add Donation, Voice Assistant
+    ];
+
+    if (isAdmin) {
+      items.add({
+        'icon': Icons.admin_panel_settings_outlined, // Matches image
+        'label': 'Admin Panel',
+        'onTap': () => Navigator.pushNamed(context, '/admin'),
+      });
+    }
+    return items;
+  }
+
+  Widget _buildDashboardCard({
     required IconData icon,
     required String label,
-    required double fontSize,
-    required double iconSize,
     required VoidCallback onTap,
-    Color borderColor = Colors.blue,
+    required Color iconColor,
+    required Color textColor,
+    required double cardFontSize, // Now dynamic
+    required double cardIconSize, // Now dynamic
     bool showBadge = false,
     String badgeText = '',
   }) {
-    return Material(
-      color: Colors.white,
-      elevation: 4,
-      borderRadius: BorderRadius.circular(12),
+    return Card(
+      color: Colors.white, // Card background is white
+      elevation: 0, // No shadow for the cards
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
-        splashColor: borderColor.withOpacity(0.3),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: borderColor, width: 2),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        splashColor: _greenAccent.withOpacity(0.1), // Subtle green splash
+        child: Padding(
+          padding: const EdgeInsets.all(6.0), // Further reduced padding
           child: Stack(
             children: [
               Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(icon, size: iconSize, color: borderColor),
-                    const SizedBox(height: 6),
+                    Icon(icon, size: cardIconSize, color: iconColor), // Uses dynamic size
+                    const SizedBox(height: 4), // Reduced spacing
                     Text(
                       label,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontSize: fontSize,
+                        fontSize: cardFontSize, // Uses dynamic size
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: textColor,
                       ),
+                      maxLines: 2, // Allow label to wrap for smaller cards
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
               if (showBadge)
                 Positioned(
-                  right: 4,
-                  top: 4,
+                  right: 0, // Align to top right
+                  top: 0,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1), // Smaller badge padding
                     decoration: BoxDecoration(
-                      color: Colors.redAccent,
-                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.redAccent, // Red for urgent badge
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       badgeText,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white,
-                        fontSize: fontSize * 0.7,
+                        fontSize: 8, // Even smaller font for badge
                         fontWeight: FontWeight.bold,
                       ),
                     ),

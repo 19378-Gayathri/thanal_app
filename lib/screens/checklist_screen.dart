@@ -32,56 +32,163 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
     {'key': 'cash', 'done': false, 'icon': Icons.attach_money},
   ];
 
+  int _packedItemsCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _calculatePackedItems(); // Initialize count
+  }
+
+  void _calculatePackedItems() {
+    _packedItemsCount = checklist.where((item) => item['done'] == true).length;
+  }
+
   @override
   Widget build(BuildContext context) {
-    print("Rebuilding ChecklistScreen with locale: ${context.locale}"); 
+    print("Rebuilding ChecklistScreen with locale: ${context.locale}");
+    final int totalItems = checklist.length;
+    final double readinessScore = (_packedItemsCount / totalItems) * 100;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFE8F5E9),
-      appBar: AppBar(
-        title: Text('emergency checklist'.tr()),
-        backgroundColor: Colors.teal,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: ListView.builder(
-          itemCount: checklist.length,
-          itemBuilder: (context, index) {
-            final item = checklist[index];
-            return Card(
-              color: item['done'] ? Colors.teal[100] : Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.teal.shade200, width: 1),
+      backgroundColor: const Color(0xFFE8F5E9), // Light green background
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            backgroundColor: Colors.white, // White app bar
+            expandedHeight: 120.0, // Reduced height as 'ReadyNow' is removed
+            floating: false,
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                color: Colors.white, // Background color for the top section
+                padding: const EdgeInsets.fromLTRB(16.0, 50.0, 16.0, 0), // Adjust top padding
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Removed the Row containing "ReadyNow" logo and text
+                    Text(
+                      'Your Emergency Checklist'.tr(),
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[800],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Stay prepared for any situation.'.tr(),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              elevation: 3,
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              child: CheckboxListTile(
-                title: Text(
-                  item['key'].toString().tr(), 
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    decoration:
-                        item['done'] ? TextDecoration.lineThrough : null,
-                    color: item['done'] ? Colors.grey : Colors.black,
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.all(12.0),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate(
+                [
+                  Card(
+                    color: Colors.white, // White card background
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Colors.grey.shade300, width: 1),
+                    ),
+                    elevation: 0, // No shadow
+                    margin: const EdgeInsets.only(bottom: 20),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Readiness Score'.tr(),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          LinearProgressIndicator(
+                            value: _packedItemsCount / totalItems,
+                            backgroundColor: Colors.grey[200],
+                            color: Colors.green,
+                            minHeight: 8,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '$_packedItemsCount of $totalItems items packed'.tr(),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              Text(
+                                '${readinessScore.round()}%',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green[700],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-                value: item['done'],
-                onChanged: (bool? value) {
-                  setState(() {
-                    item['done'] = value!;
-                  });
-                },
-                secondary: Icon(
-                  item['icon'],
-                  color: item['done'] ? Colors.grey : Colors.teal,
-                  size: 28,
-                ),
-                activeColor: Colors.teal,
-                controlAffinity: ListTileControlAffinity.trailing,
+                  ...checklist.map((item) {
+                    return Card(
+                      color: item['done'] ? Colors.green[50] : Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(color: Colors.grey.shade300, width: 1),
+                      ),
+                      elevation: 0,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      child: CheckboxListTile(
+                        title: Text(
+                          item['key'].toString().tr(),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            decoration:
+                                item['done'] ? TextDecoration.lineThrough : null,
+                            color: item['done'] ? Colors.grey[600] : Colors.black87,
+                          ),
+                        ),
+                        value: item['done'],
+                        onChanged: (bool? value) {
+                          setState(() {
+                            item['done'] = value!;
+                            _calculatePackedItems();
+                          });
+                        },
+                        secondary: Icon(
+                          item['icon'],
+                          color: item['done'] ? Colors.grey[400] : Colors.green[700],
+                          size: 28,
+                        ),
+                        activeColor: Colors.green,
+                        checkColor: Colors.white,
+                        controlAffinity: ListTileControlAffinity.trailing,
+                      ),
+                    );
+                  }).toList(),
+                ],
               ),
-            );
-          },
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
