@@ -18,6 +18,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _login() async {
     setState(() => _loading = true);
+
     try {
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
@@ -66,76 +67,123 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
-          /// 🔹 Dark Overlay (improves readability)
+          /// 🔹 Dark Overlay
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withOpacity(0.4),
             ),
           ),
 
-          /// 🔹 Login Form
+          /// 🔹 Login Card
           Center(
-            child: Container(
-              width: 320,
-              padding: EdgeInsets.all(25),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "Login",
-                    style: TextStyle(
-                        fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 20),
-
-                  TextField(
-                    controller: _emailController,
-                    decoration: InputDecoration(
-                      labelText: "Email",
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                  ),
-                  SizedBox(height: 10),
-
-                  TextField(
-                    controller: _passwordController,
-                    decoration: InputDecoration(
-                      labelText: "Password",
-                      border: OutlineInputBorder(),
-                    ),
-                    obscureText: true,
-                  ),
-                  SizedBox(height: 15),
-
-                  _loading
-                      ? CircularProgressIndicator()
-                      : SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _login,
-                            child: Text("Login"),
-                          ),
-                        ),
-
-                  SizedBox(height: 10),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text("Don't have an account? "),
-                      TextButton(
-                        onPressed: () =>
-                            Navigator.pushNamed(context, '/signup'),
-                        child: Text("Register"),
-                      )
+            child: SingleChildScrollView(
+              child: Container(
+                width: 360,
+                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 35),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFFE3F2FD),
+                      Color(0xFFBBDEFB),
                     ],
-                  )
-                ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 15,
+                      offset: Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "Welcome Back",
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue[900],
+                      ),
+                    ),
+                    SizedBox(height: 25),
+
+                    /// Email Field
+                    TextField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        labelText: "Email",
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.9),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    SizedBox(height: 15),
+
+                    /// Password Field
+                    TextField(
+                      controller: _passwordController,
+                      decoration: InputDecoration(
+                        labelText: "Password",
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.9),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      obscureText: true,
+                    ),
+                    SizedBox(height: 20),
+
+                    /// Login Button
+                    _loading
+                        ? CircularProgressIndicator()
+                        : SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color.fromARGB(255, 240, 245, 249),
+                                padding:
+                                    EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(12),
+                                ),
+                              ),
+                              onPressed: _login,
+                              child: Text(
+                                "Login",
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ),
+
+                    SizedBox(height: 15),
+
+                    /// Register Option
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text("Don't have an account? "),
+                        TextButton(
+                          onPressed: () =>
+                              Navigator.pushNamed(context, '/signup'),
+                          child: Text(
+                            "Register",
+                            style:
+                                TextStyle(color: Colors.blue[900]),
+                          ),
+                        )
+                      ],
+                    )
+                  ],
+                ),
               ),
             ),
           ),

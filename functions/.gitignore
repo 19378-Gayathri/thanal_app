@@ -1,0 +1,5 @@
+node_modules/
+*.local
+functions/node_modules/
+.env
+build/

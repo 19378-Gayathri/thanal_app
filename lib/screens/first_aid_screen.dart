@@ -56,9 +56,9 @@ class _FirstAidScreenState extends State<FirstAidScreen> {
   bool _showFavoritesOnly = false;
   SharedPreferences? _prefs;
 
-  final Color _appPrimaryGreen = const Color(0xFF4CAF50);
-  final Color _appLightGreen = const Color(0xFFEEF7EE);
-  final Color _appCardColor = Colors.white;
+final Color _appPrimaryBlue = const Color(0xFF1565C0); // Dark blue
+final Color _appLightBlue   = const Color(0xFF42A5F5); // Light blue
+final Color _appCardColor   = Colors.white;
 
   @override
   void initState() {
@@ -197,11 +197,11 @@ class _FirstAidScreenState extends State<FirstAidScreen> {
     _filterTips();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final Color primaryColor = _appPrimaryGreen;
-    final Color scaffoldBackgroundColor = _appLightGreen;
-    final Color cardColor = _appCardColor;
+ @override
+Widget build(BuildContext context) {
+  final Color primaryColor = _appPrimaryBlue;
+  final Color scaffoldBackgroundColor = _appLightBlue;
+  final Color cardColor = _appCardColor;
 
     return Scaffold(
       backgroundColor: scaffoldBackgroundColor,

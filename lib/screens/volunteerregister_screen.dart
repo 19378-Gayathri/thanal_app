@@ -20,14 +20,13 @@ class _VolunteerRegisterScreenState extends State<VolunteerRegisterScreen> {
   bool _isLoading = false;
 
   final List<Map<String, dynamic>> _expertiseOptions = [
-    {'name': 'Evacuation', 'icon': Icons.home}, // Changed icon to match image
-    {'name': 'Medical Aid', 'icon': Icons.medical_services}, // Changed icon to match image
-    {'name': 'Food Distribution', 'icon': Icons.fastfood}, // Changed icon to match image
-    {'name': 'Elderly Assistance', 'icon': Icons.elderly}, // Changed icon to match image
+    {'name': 'Evacuation', 'icon': Icons.home},
+    {'name': 'Medical Aid', 'icon': Icons.medical_services},
+    {'name': 'Food Distribution', 'icon': Icons.fastfood},
+    {'name': 'Elderly Assistance', 'icon': Icons.elderly},
   ];
 
   Future<void> _submit() async {
-    // Validate form fields
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill out all required fields.')),
@@ -35,7 +34,6 @@ class _VolunteerRegisterScreenState extends State<VolunteerRegisterScreen> {
       return;
     }
 
-    // Validate if at least one expertise is selected
     if (_selectedExpertise.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select at least one area of expertise.')),
@@ -44,14 +42,12 @@ class _VolunteerRegisterScreenState extends State<VolunteerRegisterScreen> {
     }
 
     _formKey.currentState!.save();
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        throw Exception('User not logged in. Please log in to register.');
+        throw Exception('User not logged in.');
       }
 
       await FirebaseFirestore.instance.collection('volunteers').doc(user.uid).set({
@@ -59,8 +55,8 @@ class _VolunteerRegisterScreenState extends State<VolunteerRegisterScreen> {
         'address': _address,
         'phone': _phone,
         'expertise': _selectedExpertise,
-        'status': 'pending', // Initial status
-        'availability': true, // Default availability
+        'status': 'pending',
+        'availability': true,
         'uid': user.uid,
         'timestamp': FieldValue.serverTimestamp(),
       });
@@ -69,78 +65,63 @@ class _VolunteerRegisterScreenState extends State<VolunteerRegisterScreen> {
         const SnackBar(content: Text('Registration submitted successfully! Await verification.')),
       );
 
-      // Optionally navigate back or clear form
-      // Navigator.pop(context); // Uncomment this line if you want to pop back after submission
-
-      // Clear form fields after successful submission (optional)
       _formKey.currentState?.reset();
-      setState(() {
-        _selectedExpertise.clear();
-      });
+      setState(() => _selectedExpertise.clear());
 
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error submitting registration: ${e.toString()}')),
       );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEEF5EE), // Light green background matching the image
+      backgroundColor: const Color(0xFF1E88E5), // Strong blue background
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Center( // Center the card
+          ? const Center(child: CircularProgressIndicator(color: Colors.white))
+          : Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24), // Increased padding around the card
+                padding: const EdgeInsets.all(24),
                 child: Container(
-                  width: MediaQuery.of(context).size.width > 600 ? 500 : double.infinity, // Max width for larger screens
+                  width: MediaQuery.of(context).size.width > 600 ? 500 : double.infinity,
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16), // Rounded corners for the card
+                    borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withOpacity(0.08),
                         spreadRadius: 2,
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
                       ),
                     ],
                   ),
-                  padding: const EdgeInsets.all(24), // Padding inside the card
+                  padding: const EdgeInsets.all(24),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min, // Make column take minimum space
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Custom Title as in the image
                         const Text(
                           'Volunteer Connect',
                           style: TextStyle(
-                            fontSize: 28, // Larger font size
+                            fontSize: 28,
                             fontWeight: FontWeight.bold,
                             color: Colors.black87,
                           ),
-                          textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8),
                         const Text(
                           'Join our community of volunteers. Fill out the form below to get started.',
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: Colors.grey,
-                          ),
-                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 15, color: Colors.grey),
                         ),
                         const SizedBox(height: 32),
 
-                        // Full Name Input
                         _buildLabel('Full Name'),
                         _buildTextField(
                           hintText: 'Enter your name',
@@ -150,7 +131,6 @@ class _VolunteerRegisterScreenState extends State<VolunteerRegisterScreen> {
                         ),
                         const SizedBox(height: 20),
 
-                        // Address Input
                         _buildLabel('Address'),
                         _buildTextField(
                           hintText: 'Give address',
@@ -160,49 +140,47 @@ class _VolunteerRegisterScreenState extends State<VolunteerRegisterScreen> {
                         ),
                         const SizedBox(height: 20),
 
-                        // Phone Number Input
                         _buildLabel('Phone Number'),
                         _buildTextField(
-                          hintText: '(+91) 9876543210', // Updated hint for Indian format
+                          hintText: '(+91) 9876543210',
                           keyboardType: TextInputType.phone,
                           onSaved: (value) => _phone = value!.trim(),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
                               return 'Please enter your phone number';
                             }
-                            // Regex for Indian mobile numbers (10 digits, starts with 6, 7, 8, or 9)
-                            // Allows optional +91 prefix, and optional spaces/dashes for readability
-                            final indianPhoneRegex = RegExp(r'^((\+91|\+91\s|\+91-)|(\+91)?)[6789]\d{9}$');
-
+                            final indianPhoneRegex =
+                                RegExp(r'^((\+91|\+91\s|\+91-)|(\+91)?)[6789]\d{9}$');
                             if (!indianPhoneRegex.hasMatch(value)) {
-                              return 'Enter a valid Indian phone number (e.g., +91 9876543210 or 9876543210)';
+                              return 'Enter a valid Indian phone number';
                             }
                             return null;
                           },
                         ),
                         const SizedBox(height: 32),
 
-                        // Areas of Expertise
                         _buildLabel('Areas of Expertise'),
                         Text(
                           'Select all areas where you can provide assistance.',
                           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                         ),
                         const SizedBox(height: 12),
+
                         Wrap(
-                          spacing: 12.0, // horizontal spacing between chips
-                          runSpacing: 12.0, // vertical spacing between rows of chips
+                          spacing: 12,
+                          runSpacing: 12,
                           children: _expertiseOptions.map((option) {
-                            final String expertiseName = option['name'];
-                            final IconData expertiseIcon = option['icon'];
-                            final bool isSelected = _selectedExpertise.contains(expertiseName);
+                            final name = option['name'];
+                            final icon = option['icon'];
+                            final isSelected = _selectedExpertise.contains(name);
+
                             return GestureDetector(
                               onTap: () {
                                 setState(() {
                                   if (isSelected) {
-                                    _selectedExpertise.remove(expertiseName);
+                                    _selectedExpertise.remove(name);
                                   } else {
-                                    _selectedExpertise.add(expertiseName);
+                                    _selectedExpertise.add(name);
                                   }
                                 });
                               },
@@ -210,39 +188,39 @@ class _VolunteerRegisterScreenState extends State<VolunteerRegisterScreen> {
                                 duration: const Duration(milliseconds: 200),
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                 decoration: BoxDecoration(
-                                  color: isSelected ? const Color(0xFFE8F5E9) : Colors.white, // Light green fill when selected
+                                  color: isSelected
+                                      ? const Color(0xFFE3F2FD)
+                                      : Colors.white,
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: isSelected ? const Color(0xFF66BB6A) : Colors.grey.shade300, // Darker green border when selected
+                                    color: isSelected
+                                        ? const Color(0xFF42A5F5)
+                                        : Colors.grey.shade300,
                                     width: 1.5,
                                   ),
-                                  boxShadow: isSelected
-                                      ? [
-                                          BoxShadow(
-                                            color: const Color(0xFF66BB6A).withOpacity(0.2),
-                                            blurRadius: 5,
-                                            spreadRadius: 1,
-                                          )
-                                        ]
-                                      : [],
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
-                                      isSelected ? Icons.check_box : Icons.check_box_outline_blank,
+                                      isSelected
+                                          ? Icons.check_box
+                                          : Icons.check_box_outline_blank,
                                       size: 20,
-                                      color: isSelected ? const Color(0xFF4CAF50) : Colors.grey,
+                                      color: isSelected
+                                          ? const Color(0xFF1E88E5)
+                                          : Colors.grey,
                                     ),
                                     const SizedBox(width: 8),
-                                    Icon(expertiseIcon, size: 20, color: Colors.black54),
+                                    Icon(icon, size: 20, color: Colors.black54),
                                     const SizedBox(width: 6),
                                     Text(
-                                      expertiseName,
+                                      name,
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: Colors.black87,
-                                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
                                       ),
                                     ),
                                   ],
@@ -251,26 +229,27 @@ class _VolunteerRegisterScreenState extends State<VolunteerRegisterScreen> {
                             );
                           }).toList(),
                         ),
+
                         const SizedBox(height: 32),
 
-                        // Submit Button
                         Center(
                           child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4CAF50), // Green button background
-                              foregroundColor: Colors.white, // White icon and text
-                              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                              backgroundColor: const Color(0xFF1E88E5),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 40, vertical: 15),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10), // Rounded corners
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              elevation: 5, // Shadow for the button
+                              elevation: 5,
                             ),
                             onPressed: _submit,
-                            icon: const Icon(Icons.send), // Send icon
+                            icon: const Icon(Icons.send),
                             label: const Text(
                               'Submit Registration',
                               style: TextStyle(
-                                fontSize: 18, // Larger font size for the button text
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -285,10 +264,9 @@ class _VolunteerRegisterScreenState extends State<VolunteerRegisterScreen> {
     );
   }
 
-  // Helper widget for consistent label styling
   Widget _buildLabel(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         text,
         style: const TextStyle(
@@ -300,7 +278,6 @@ class _VolunteerRegisterScreenState extends State<VolunteerRegisterScreen> {
     );
   }
 
-  // Helper widget for consistent text field styling
   Widget _buildTextField({
     required String hintText,
     TextInputType keyboardType = TextInputType.text,
@@ -310,26 +287,24 @@ class _VolunteerRegisterScreenState extends State<VolunteerRegisterScreen> {
     return TextFormField(
       decoration: InputDecoration(
         hintText: hintText,
-        fillColor: const Color(0xFFE8F5E9), // Light green background for text fields
         filled: true,
+        fillColor: const Color(0xFFE3F2FD), // Light blue input
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide.none, // No border visible
-        ),
-        enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFF66BB6A), width: 1.5), // Subtle green border on focus
+          borderSide: const BorderSide(
+              color: Color(0xFF42A5F5), width: 1.5),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
       keyboardType: keyboardType,
       onSaved: onSaved,
       validator: validator,
-      style: const TextStyle(color: Colors.black87), // Text color
+      style: const TextStyle(color: Colors.black87),
     );
   }
 }

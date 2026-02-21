@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'LiveMapScreen.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -12,9 +13,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isAdmin = false;
   bool _isAdminLoaded = false;
 
-  final Color _baseGreenBackground = const Color(0xFFEEF7EE);
-  final Color _greenAccent = const Color(0xFF4CAF50);
-  final Color _darkGreenText = const Color(0xFF2E7D32);
+  final Color _blueAccent = const Color(0xFF2196F3);
+  final Color _darkBlue = const Color(0xFF0D47A1);
 
   @override
   void didChangeDependencies() {
@@ -46,11 +46,11 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Background Image (UNCHANGED)
+          // 🔹 Background Image
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/background.jpeg'),
+                image: AssetImage('assets/background.jpg'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -60,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Heading
+                // 🔹 Heading (Now White)
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Text(
@@ -68,53 +68,54 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(
                       fontSize: elderMode ? 34 : 24,
                       fontWeight: FontWeight.bold,
-                      color: Colors.green.shade900, // Changed to black
+                      color: Colors.white, // ✅ changed to white
                     ),
                   ),
                 ),
 
-Padding(
-  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-  child: Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween, // 👈 pushes to right
-    children: [
-      const SizedBox(), // empty space on left
-      Row(
-        children: [
-          Text(
-            'Elder Mode',
-            style: TextStyle(
-              fontSize: elderMode ? 20 : 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Transform.scale(
-            scale: elderMode ? 1.5 : 1.2,
-            child: Switch(
-              value: elderMode,
-              onChanged: (value) {
-                setState(() {
-                  elderMode = value;
-                });
-              },
-              activeColor: _greenAccent,
-            ),
-          ),
-        ],
-      ),
-    ],
-  ),
-),
+                // 🔹 Elder Mode Switch
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const SizedBox(),
+                      Row(
+                        children: [
+                          Text(
+                            'Elder Mode',
+                            style: TextStyle(
+                              fontSize: elderMode ? 20 : 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Transform.scale(
+                            scale: elderMode ? 1.5 : 1.2,
+                            child: Switch(
+                              value: elderMode,
+                              onChanged: (value) {
+                                setState(() {
+                                  elderMode = value;
+                                });
+                              },
+                              activeColor: _blueAccent,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
 
-                // Dashboard Grid
+                // 🔹 Dashboard Grid
                 Expanded(
                   child: GridView.builder(
                     padding: const EdgeInsets.all(16),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
+                      crossAxisCount: 5,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
                       childAspectRatio: 1,
@@ -126,8 +127,6 @@ Padding(
                         icon: item['icon'] as IconData,
                         label: item['label'] as String,
                         onTap: item['onTap'] as VoidCallback,
-                        iconColor: _greenAccent,
-                        textColor: _darkGreenText,
                         cardFontSize: cardFontSize,
                         cardIconSize: cardIconSize,
                         showBadge:
@@ -146,105 +145,114 @@ Padding(
     );
   }
 
-List<Map<String, dynamic>> _getDashboardItems() {
-  final List<Map<String, dynamic>> items = [
-    {
-      'icon': Icons.lightbulb_outline,
-      'label': 'Live Alerts',
-      'onTap': () => Navigator.pushNamed(context, '/alert'),
-    },
-    {
-      'icon': Icons.checklist_rtl,
-      'label': 'Checklist Access',
-      'onTap': () => Navigator.pushNamed(context, '/checklist'),
-    },
-    {
-      'icon': Icons.people_outline,
-      'label': 'Emergency Contacts',
-      'onTap': () =>
-          Navigator.pushNamed(context, '/emergency_contacts'),
-    },
-    {
-      'icon': Icons.health_and_safety_outlined,
-      'label': 'First Aid Guide',
-      'onTap': () => Navigator.pushNamed(context, '/first-aid'),
-    },
-    {
-      'icon': Icons.chat_bubble_outline,
-      'label': 'Thanal Chatbot',
-      'onTap': () => Navigator.pushNamed(context, '/chatbot'),
-    },
-    {
-      'icon': Icons.edit_note,
-      'label': 'Report Incident',
-      'onTap': () => Navigator.pushNamed(context, '/report'),
-    },
-    {
-      'icon': Icons.dashboard_outlined,
-      'label': 'Incident Dashboard',
-      'onTap': () =>
-          Navigator.pushNamed(context, '/incidentDashboard'),
-    },
-    {
-      'icon': Icons.person_add_alt_1_outlined,
-      'label': 'Volunteer Registration',
-      'onTap': () => Navigator.pushNamed(context, '/volunteer'),
-    },
+  List<Map<String, dynamic>> _getDashboardItems() {
+    final List<Map<String, dynamic>> items = [
+      {
+        'icon': Icons.lightbulb_outline,
+        'label': 'Live Alerts',
+        'onTap': () => Navigator.pushNamed(context, '/alert'),
+      },
+      {
+        'icon': Icons.checklist_rtl,
+        'label': 'Checklist Access',
+        'onTap': () => Navigator.pushNamed(context, '/checklist'),
+      },
+      {
+        'icon': Icons.people_outline,
+        'label': 'Emergency Contacts',
+        'onTap': () =>
+            Navigator.pushNamed(context, '/emergency_contacts'),
+      },
+      {
+        'icon': Icons.health_and_safety_outlined,
+        'label': 'First Aid Guide',
+        'onTap': () => Navigator.pushNamed(context, '/first-aid'),
+      },
+      {
+        'icon': Icons.chat_bubble_outline,
+        'label': 'Thanal Chatbot',
+        'onTap': () => Navigator.pushNamed(context, '/chatbot'),
+      },
+      {
+        'icon': Icons.edit_note,
+        'label': 'Report Incident',
+        'onTap': () => Navigator.pushNamed(context, '/report'),
+      },
+      {
+        'icon': Icons.dashboard_outlined,
+        'label': 'Incident Dashboard',
+        'onTap': () =>
+            Navigator.pushNamed(context, '/incidentDashboard'),
+      },
+      {
+        'icon': Icons.person_add_alt_1_outlined,
+        'label': 'Volunteer Registration',
+        'onTap': () => Navigator.pushNamed(context, '/volunteer'),
+      },
+      {
+        'icon': Icons.volunteer_activism,
+        'label': 'Donations',
+        'onTap': () =>
+            Navigator.pushNamed(context, '/donation-requests'),
+      },
+      {
+        'icon': Icons.add_circle_outline,
+        'label': 'Request Help',
+        'onTap': () =>
+            Navigator.pushNamed(context, '/create-request'),
+      },
+      {
+        'icon': Icons.location_on_outlined,
+        'label': 'Live Location',
+        'onTap': () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => LiveMapScreen(),
+              ),
+            ),
+      },
+    ];
 
-    // 🔹 NEW: View Donation Requests
-    {
-      'icon': Icons.volunteer_activism,
-      'label': 'Donations',
-      'onTap': () =>
-          Navigator.pushNamed(context, '/donation-requests'),
-    },
+    if (isAdmin) {
+      items.add({
+        'icon': Icons.admin_panel_settings_outlined,
+        'label': 'Admin Panel',
+        'onTap': () => Navigator.pushNamed(context, '/admin'),
+      });
+    }
 
-    // 🔹 NEW: Create Donation Request
-    {
-      'icon': Icons.add_circle_outline,
-      'label': 'Request Help',
-      'onTap': () =>
-          Navigator.pushNamed(context, '/create-request'),
-    },
-    {
-  'icon': Icons.location_on_outlined,
-  'label': 'Live Location',
-  'onTap': () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => LiveMapScreen(),
-        ),
-      ),
-},
-  ];
-
-  if (isAdmin) {
-    items.add({
-      'icon': Icons.admin_panel_settings_outlined,
-      'label': 'Admin Panel',
-      'onTap': () => Navigator.pushNamed(context, '/admin'),
-    });
+    return items;
   }
-
-  return items;
-}
 
   Widget _buildDashboardCard({
     required IconData icon,
     required String label,
     required VoidCallback onTap,
-    required Color iconColor,
-    required Color textColor,
     required double cardFontSize,
     required double cardIconSize,
     bool showBadge = false,
     String badgeText = '',
   }) {
-    return Card(
-      color: const Color(0xFFDFF5E1), // Light green card
-      elevation: 6,
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16)),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF42A5F5),
+            Color(0xFF1E88E5),
+            Color(0xFF1565C0),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 8,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
@@ -255,37 +263,32 @@ List<Map<String, dynamic>> _getDashboardItems() {
             children: [
               Icon(icon,
                   size: cardIconSize,
-                  color: iconColor),
+                  color: Colors.white), // ✅ white icon
               const SizedBox(height: 10),
               Text(
                 label,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: cardFontSize,
-                  color: textColor,
+                  color: Colors.white, // ✅ white text
                   fontWeight: FontWeight.w600,
                 ),
               ),
               if (showBadge)
                 Container(
-                  margin:
-                      const EdgeInsets.only(top: 6),
-                  padding:
-                      const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3),
+                  margin: const EdgeInsets.only(top: 6),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: Colors.red,
-                    borderRadius:
-                        BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     badgeText,
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 10,
-                      fontWeight:
-                          FontWeight.bold,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),

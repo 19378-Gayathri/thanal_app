@@ -22,14 +22,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
 
-      // Create user in Firebase Auth
-      UserCredential userCred = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
-
-      // You can save extra info like username in Firestore here if needed
+      await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
 
       Navigator.pushReplacementNamed(context, '/login');
     } on FirebaseAuthException catch (e) {
-      print("Registration error: $e");
       String message = "Registration failed";
       if (e.code == 'email-already-in-use') message = "Email already in use";
       else if (e.code == 'weak-password') message = "Password is too weak";
@@ -43,63 +40,171 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   bool isValidEmail(String email) {
-    final emailRegex = RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
+    final emailRegex =
+        RegExp(r"^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$");
     return emailRegex.hasMatch(email);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(24),
-          child: Container(
-            padding: EdgeInsets.all(30),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text("Register", style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 20),
+      body: Stack(
+        children: [
+          /// 🔹 Background Image
+          Positioned.fill(
+            child: Image.asset(
+              "assets/register_bg.jpg",
+              fit: BoxFit.cover,
+            ),
+          ),
 
-                  TextFormField(
-                    controller: _usernameController,
-                    decoration: InputDecoration(labelText: "Username", border: OutlineInputBorder()),
-                    validator: (val) => val == null || val.isEmpty ? "Enter username" : null,
+          /// 🔹 Dark Overlay
+          Positioned.fill(
+            child: Container(
+              color: Colors.black.withOpacity(0.4),
+            ),
+          ),
+
+          /// 🔹 Register Card
+          Center(
+            child: SingleChildScrollView(
+              child: Container(
+                width: 370,
+                padding: EdgeInsets.symmetric(
+                    horizontal: 30, vertical: 35),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Color(0xFFE3F2FD),
+                      Color(0xFFBBDEFB),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                  SizedBox(height: 15),
+                  borderRadius:
+                      BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 15,
+                      offset: Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "Create Account",
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue[900],
+                        ),
+                      ),
+                      SizedBox(height: 25),
 
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: InputDecoration(labelText: "Email", border: OutlineInputBorder()),
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (val) => val == null || !isValidEmail(val) ? "Enter valid email" : null,
-                  ),
-                  SizedBox(height: 15),
-
-                  TextFormField(
-                    controller: _passwordController,
-                    decoration: InputDecoration(labelText: "Password", border: OutlineInputBorder()),
-                    obscureText: true,
-                    validator: (val) => val == null || val.length < 6 ? "At least 6 chars" : null,
-                  ),
-                  SizedBox(height: 20),
-
-                  _loading
-                      ? CircularProgressIndicator()
-                      : SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _register,
-                            child: Text("Register"),
+                      /// Username
+                      TextFormField(
+                        controller: _usernameController,
+                        decoration: InputDecoration(
+                          labelText: "Username",
+                          filled: true,
+                          fillColor:
+                              Colors.white.withOpacity(0.9),
+                          border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.circular(12),
                           ),
                         ),
-                ],
+                        validator: (val) =>
+                            val == null || val.isEmpty
+                                ? "Enter username"
+                                : null,
+                      ),
+                      SizedBox(height: 15),
+
+                      /// Email
+                      TextFormField(
+                        controller: _emailController,
+                        decoration: InputDecoration(
+                          labelText: "Email",
+                          filled: true,
+                          fillColor:
+                              Colors.white.withOpacity(0.9),
+                          border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.circular(12),
+                          ),
+                        ),
+                        keyboardType:
+                            TextInputType.emailAddress,
+                        validator: (val) =>
+                            val == null ||
+                                    !isValidEmail(val)
+                                ? "Enter valid email"
+                                : null,
+                      ),
+                      SizedBox(height: 15),
+
+                      /// Password
+                      TextFormField(
+                        controller: _passwordController,
+                        decoration: InputDecoration(
+                          labelText: "Password",
+                          filled: true,
+                          fillColor:
+                              Colors.white.withOpacity(0.9),
+                          border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.circular(12),
+                          ),
+                        ),
+                        obscureText: true,
+                        validator: (val) =>
+                            val == null || val.length < 6
+                                ? "At least 6 characters"
+                                : null,
+                      ),
+                      SizedBox(height: 20),
+
+                      /// Register Button
+                      _loading
+                          ? CircularProgressIndicator()
+                          : SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                style: ElevatedButton
+                                    .styleFrom(
+                                  backgroundColor:
+                                      Colors.blue[700],
+                                  padding: EdgeInsets
+                                      .symmetric(
+                                          vertical: 14),
+                                  shape:
+                                      RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius
+                                            .circular(12),
+                                  ),
+                                ),
+                                onPressed: _register,
+                                child: Text(
+                                  "Register",
+                                  style: TextStyle(
+                                      fontSize: 16),
+                                ),
+                              ),
+                            ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

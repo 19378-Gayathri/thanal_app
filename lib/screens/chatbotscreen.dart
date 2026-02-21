@@ -72,25 +72,26 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     }
     return "en-US";
   }
+
   String _cleanForSpeech(String text) {
-  return text
-      .replaceAll(RegExp(r'\*\*'), '')
-      .replaceAll(RegExp(r'\*'), '')
-      .replaceAll(RegExp(r'_'), '')
-      .replaceAll(RegExp(r'`'), '')
-      .replaceAll(RegExp(r'#'), '')
-      .replaceAll(RegExp(r'- '), '')
-      .replaceAll(RegExp(r'\d+\.'), '')
-      .replaceAll(RegExp(r'\n+'), '\n')
-      .trim();
-}
+    return text
+        .replaceAll(RegExp(r'\*\*'), '')
+        .replaceAll(RegExp(r'\*'), '')
+        .replaceAll(RegExp(r'_'), '')
+        .replaceAll(RegExp(r'`'), '')
+        .replaceAll(RegExp(r'#'), '')
+        .replaceAll(RegExp(r'- '), '')
+        .replaceAll(RegExp(r'\d+\.'), '')
+        .replaceAll(RegExp(r'\n+'), '\n')
+        .trim();
+  }
 
   Future<void> _speak(String text) async {
     if (text.isEmpty) return;
-    final cleanedText = _cleanForSpeech(text);  
+    final cleanedText = _cleanForSpeech(text);
     final language = _detectLanguage(text);
-    await _flutterTts.setLanguage(language);   
-    await _flutterTts.speak(text);
+    await _flutterTts.setLanguage(language);
+    await _flutterTts.speak(cleanedText);
   }
 
   void _listen() async {
@@ -135,7 +136,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           "X-Title": "Thanal Assistant"
         },
         body: jsonEncode({
-         "model": "openai/gpt-4o-mini",
+          "model": "openai/gpt-4o-mini",
           "messages": [
             {
               "role": "system",
@@ -171,82 +172,154 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text("Thanal Voice Assistant"),
-        backgroundColor: Colors.green[700],
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              reverse: true,
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages.reversed.toList()[index];
-                return Align(
-                  alignment: message.isUser
-                      ? Alignment.centerRight
-                      : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.all(8),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: message.isUser
-                          ? Colors.green[600]
-                          : Colors.grey[300],
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Text(
-                      message.text,
-                      style: TextStyle(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0D47A1),
+              Color(0xFF42A5F5),
+            ],
+          ),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 90),
+
+            Expanded(
+              child: ListView.builder(
+                reverse: true,
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  final message = _messages.reversed.toList()[index];
+
+                  return Align(
+                    alignment: message.isUser
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.all(14),
+                      constraints:
+                          const BoxConstraints(maxWidth: 280),
+                      decoration: BoxDecoration(
+                        gradient: message.isUser
+                            ? const LinearGradient(
+                                colors: [
+                                  Color(0xFF1565C0),
+                                  Color(0xFF42A5F5),
+                                ],
+                              )
+                            : null,
                         color: message.isUser
-                            ? Colors.white
-                            : Colors.black87,
+                            ? null
+                            : Colors.white.withOpacity(0.9),
+                        borderRadius:
+                            BorderRadius.circular(18),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 4,
+                            offset: Offset(2, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        message.text,
+                        style: TextStyle(
+                          color: message.isUser
+                              ? Colors.white
+                              : Colors.black87,
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-          if (_isLoading) const LinearProgressIndicator(),
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _textController,
-                    enabled: _isApiConfigured,
-                    decoration: InputDecoration(
-                      hintText:
-                          _isListening ? "Listening..." : "Type or speak...",
-                      filled: true,
-                      fillColor: Colors.grey[200],
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        borderSide: BorderSide.none,
+
+            if (_isLoading)
+              const LinearProgressIndicator(
+                backgroundColor: Colors.white24,
+                color: Colors.white,
+              ),
+
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.15),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _textController,
+                      enabled: _isApiConfigured,
+                      style: const TextStyle(
+                          color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: _isListening
+                            ? "Listening..."
+                            : "Type or speak...",
+                        hintStyle: const TextStyle(
+                            color: Colors.white70),
+                        filled: true,
+                        fillColor:
+                            Colors.white.withOpacity(0.2),
+                        border: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(24),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      onSubmitted: _sendMessage,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      _isListening
+                          ? Icons.mic_off
+                          : Icons.mic,
+                      color: Colors.white,
+                    ),
+                    onPressed: _listen,
+                  ),
+                  Container(
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        colors: [
+                          Color(0xFF1565C0),
+                          Color(0xFF42A5F5),
+                        ],
                       ),
                     ),
-                    onSubmitted: _sendMessage,
+                    child: IconButton(
+                      icon: const Icon(Icons.send,
+                          color: Colors.white),
+                      onPressed: () =>
+                          _sendMessage(
+                              _textController.text),
+                    ),
                   ),
-                ),
-                IconButton(
-                  icon: Icon(
-                      _isListening ? Icons.mic_off : Icons.mic),
-                  onPressed: _listen,
-                  color: Colors.green[700],
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: () =>
-                      _sendMessage(_textController.text),
-                  color: Colors.green[700],
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

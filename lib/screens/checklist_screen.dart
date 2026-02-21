@@ -37,7 +37,7 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
   @override
   void initState() {
     super.initState();
-    _calculatePackedItems(); // Initialize count
+    _calculatePackedItems();
   }
 
   void _calculatePackedItems() {
@@ -46,149 +46,174 @@ class _ChecklistScreenState extends State<ChecklistScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print("Rebuilding ChecklistScreen with locale: ${context.locale}");
     final int totalItems = checklist.length;
     final double readinessScore = (_packedItemsCount / totalItems) * 100;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE8F5E9), // Light green background
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            backgroundColor: Colors.white, // White app bar
-            expandedHeight: 120.0, // Reduced height as 'ReadyNow' is removed
-            floating: false,
-            pinned: true,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                color: Colors.white, // Background color for the top section
-                padding: const EdgeInsets.fromLTRB(16.0, 50.0, 16.0, 0), // Adjust top padding
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Removed the Row containing "ReadyNow" logo and text
-                    Text(
-                      'Your Emergency Checklist'.tr(),
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF1565C0), // Dark blue
+              Color(0xFF42A5F5), // Light blue
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              backgroundColor: Colors.transparent,
+              expandedHeight: 120.0,
+              floating: false,
+              pinned: true,
+              flexibleSpace: FlexibleSpaceBar(
+                background: Container(
+                  padding:
+                      const EdgeInsets.fromLTRB(16.0, 50.0, 16.0, 0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Your Emergency Checklist'.tr(),
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Stay prepared for any situation.'.tr(),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.all(12.0),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate(
+                  [
+                    Card(
+                      color: Colors.white.withOpacity(0.15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 0,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Readiness Score',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            LinearProgressIndicator(
+                              value: _packedItemsCount /
+                                  totalItems,
+                              backgroundColor:
+                                  Colors.white24,
+                              color: Colors.blueAccent,
+                              minHeight: 8,
+                              borderRadius:
+                                  BorderRadius.circular(10),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '$_packedItemsCount of $totalItems items packed',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                                Text(
+                                  '${readinessScore.round()}%',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight:
+                                        FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Stay prepared for any situation.'.tr(),
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[600],
-                      ),
-                    ),
+                    ...checklist.map((item) {
+                      return Card(
+                        color: item['done']
+                            ? Colors.white.withOpacity(0.2)
+                            : Colors.white.withOpacity(0.1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                        margin:
+                            const EdgeInsets.symmetric(
+                                vertical: 8),
+                        child: CheckboxListTile(
+                          title: Text(
+                            item['key']
+                                .toString()
+                                .tr(),
+                            style: TextStyle(
+                              fontWeight:
+                                  FontWeight.w600,
+                              decoration: item['done']
+                                  ? TextDecoration
+                                      .lineThrough
+                                  : null,
+                              color: Colors.white,
+                            ),
+                          ),
+                          value: item['done'],
+                          onChanged: (bool? value) {
+                            setState(() {
+                              item['done'] = value!;
+                              _calculatePackedItems();
+                            });
+                          },
+                          secondary: Icon(
+                            item['icon'],
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                          activeColor: Colors.white,
+                          checkColor: Colors.blue,
+                          controlAffinity:
+                              ListTileControlAffinity
+                                  .trailing,
+                        ),
+                      );
+                    }).toList(),
                   ],
                 ),
               ),
             ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.all(12.0),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate(
-                [
-                  Card(
-                    color: Colors.white, // White card background
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(color: Colors.grey.shade300, width: 1),
-                    ),
-                    elevation: 0, // No shadow
-                    margin: const EdgeInsets.only(bottom: 20),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Readiness Score'.tr(),
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          LinearProgressIndicator(
-                            value: _packedItemsCount / totalItems,
-                            backgroundColor: Colors.grey[200],
-                            color: Colors.green,
-                            minHeight: 8,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '$_packedItemsCount of $totalItems items packed'.tr(),
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              Text(
-                                '${readinessScore.round()}%',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green[700],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  ...checklist.map((item) {
-                    return Card(
-                      color: item['done'] ? Colors.green[50] : Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(color: Colors.grey.shade300, width: 1),
-                      ),
-                      elevation: 0,
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      child: CheckboxListTile(
-                        title: Text(
-                          item['key'].toString().tr(),
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            decoration:
-                                item['done'] ? TextDecoration.lineThrough : null,
-                            color: item['done'] ? Colors.grey[600] : Colors.black87,
-                          ),
-                        ),
-                        value: item['done'],
-                        onChanged: (bool? value) {
-                          setState(() {
-                            item['done'] = value!;
-                            _calculatePackedItems();
-                          });
-                        },
-                        secondary: Icon(
-                          item['icon'],
-                          color: item['done'] ? Colors.grey[400] : Colors.green[700],
-                          size: 28,
-                        ),
-                        activeColor: Colors.green,
-                        checkColor: Colors.white,
-                        controlAffinity: ListTileControlAffinity.trailing,
-                      ),
-                    );
-                  }).toList(),
-                ],
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

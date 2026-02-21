@@ -48,5 +48,6 @@ flutter:
     - assets/start.jpg
     - assets/login.png 
     - assets/.env
-    - assets/background.jpeg
+    - assets/background.jpg
     - assets/login_bg.jpg
+    - assets/register_bg.jpg

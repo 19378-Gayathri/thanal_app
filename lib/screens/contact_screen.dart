@@ -203,55 +203,112 @@ class _ContactScreenState extends State<ContactScreen> {
 
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFE0F7FA), // Bluish-green background
-      appBar: AppBar(
-        title: const Text('Emergency Contacts'),
-        backgroundColor: Colors.teal[600],
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text(
+        'Emergency Contacts',
+        style: TextStyle(fontWeight: FontWeight.bold),
       ),
-      body: Padding(
+      backgroundColor: Colors.blue.shade700,
+      elevation: 4,
+    ),
+    body: Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color(0xFF1565C0), // Dark blue
+            Color(0xFF42A5F5), // Light blue
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: ListView(
           children: [
             const Text(
               'General Emergency Contacts',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
             ),
             const SizedBox(height: 10),
+
             ...generalContacts.map(
               (contact) => Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                color: Colors.white.withOpacity(0.15),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 child: ListTile(
-                  leading: const Icon(Icons.phone, color: Colors.teal),
-                  title: Text(contact.keys.first),
-                  trailing: Text(contact.values.first,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
+                  leading: const Icon(Icons.phone,
+                      color: Colors.white),
+                  title: Text(
+                    contact.keys.first,
+                    style: const TextStyle(
+                        color: Colors.white),
+                  ),
+                  trailing: Text(
+                    contact.values.first,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
                   onTap: () {},
                 ),
               ),
             ),
+
             const SizedBox(height: 20),
-            const Divider(thickness: 1.2),
+            const Divider(
+              thickness: 1.2,
+              color: Colors.white54,
+            ),
             const SizedBox(height: 10),
+
             if (userDistrict != null)
               Text(
                 'Helpline Contacts for $userDistrict',
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
+
             const SizedBox(height: 10),
-            if (userDistrict != null && districtHelplines.containsKey(userDistrict))
+
+            if (userDistrict != null &&
+                districtHelplines.containsKey(userDistrict))
               ...districtHelplines[userDistrict!]!.map(
                 (contact) => Card(
-                  color: Colors.white,
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  color: Colors.white.withOpacity(0.15),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(12),
+                  ),
                   child: ListTile(
-                    leading: const Icon(Icons.call, color: Colors.teal),
-                    title: Text(contact.keys.first),
-                    trailing: Text(contact.values.first,
-                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                    leading: const Icon(Icons.call,
+                        color: Colors.white),
+                    title: Text(
+                      contact.keys.first,
+                      style: const TextStyle(
+                          color: Colors.white),
+                    ),
+                    trailing: Text(
+                      contact.values.first,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
                     onTap: () {},
                   ),
                 ),
@@ -259,31 +316,57 @@ class _ContactScreenState extends State<ContactScreen> {
             else if (userDistrict != null)
               const Padding(
                 padding: EdgeInsets.all(8.0),
-                child: Text('No district-specific contacts found.',
-                    style: TextStyle(fontSize: 16)),
+                child: Text(
+                  'No district-specific contacts found.',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white70,
+                  ),
+                ),
               ),
+
             const SizedBox(height: 24),
+
             const Text(
               'Select District',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
                 color: Colors.white,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.teal),
+                border: Border.all(
+                    color: Colors.white70),
               ),
               child: DropdownButton<String>(
                 value: userDistrict,
-                hint: const Text('Select your district'),
+                hint: const Text(
+                  'Select your district',
+                  style: TextStyle(
+                      color: Colors.white70),
+                ),
+                dropdownColor: Colors.blue.shade700,
                 isExpanded: true,
                 underline: const SizedBox(),
-                icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                icon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: Colors.white,
+                ),
+                style: const TextStyle(
+                    color: Colors.white),
                 items: districtHelplines.keys
                     .map(
-                      (district) => DropdownMenuItem(
+                      (district) =>
+                          DropdownMenuItem(
                         value: district,
                         child: Text(district),
                       ),
@@ -299,6 +382,7 @@ class _ContactScreenState extends State<ContactScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

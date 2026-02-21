@@ -6,10 +6,12 @@ class LocationPermissionScreen extends StatefulWidget {
   const LocationPermissionScreen({super.key});
 
   @override
-  State<LocationPermissionScreen> createState() => _LocationPermissionScreenState();
+  State<LocationPermissionScreen> createState() =>
+      _LocationPermissionScreenState();
 }
 
-class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
+class _LocationPermissionScreenState
+    extends State<LocationPermissionScreen> {
   @override
   void initState() {
     super.initState();
@@ -23,17 +25,20 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
       permission = await Geolocator.requestPermission();
     }
 
-    if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
-      // Permission granted — Navigate to StartScreen
+    if (permission == LocationPermission.always ||
+        permission == LocationPermission.whileInUse) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) =>  StartScreen()),
+        MaterialPageRoute(builder: (_) => const StartScreen()),
       );
     } else {
-      // Show Snackbar if not granted
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Location permission is required to continue.'),
+          content: Text(
+            'Location permission is required to continue.',
+            style: TextStyle(color: Colors.white),
+          ),
+          backgroundColor: Color(0xFF1E88E5), // Blue snackbar
         ),
       );
     }
@@ -42,21 +47,71 @@ class _LocationPermissionScreenState extends State<LocationPermissionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Enable Location")),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              "This app needs your location to provide real-time alerts.",
-              textAlign: TextAlign.center,
+      backgroundColor: const Color(0xFFEAF3FF), // ✅ Mild Blue Background
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 30),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.location_on,
+                  size: 100,
+                  color: Color(0xFF1E88E5), // Blue icon
+                ),
+
+                const SizedBox(height: 30),
+
+                const Text(
+                  "Enable Location",
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E88E5), // Blue title
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                const Text(
+                  "This app needs your location to provide real-time alerts.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black87, // Dark readable text
+                  ),
+                ),
+
+                const SizedBox(height: 40),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _checkAndRequestPermission,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          const Color(0xFF1E88E5), // Blue Button
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      "Enable Location",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _checkAndRequestPermission,
-              child: const Text("Enable Location"),
-            ),
-          ],
+          ),
         ),
       ),
     );
