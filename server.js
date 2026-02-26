@@ -98,3 +98,10 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, ()=>{
   console.log("Server running on port " + PORT);
 });
+app.get("/check-env", (req,res)=>{
+  res.json({
+    openrouter: process.env.OPENROUTER_API_KEY ? "Loaded" : "Missing",
+    weather: process.env.WEATHER_API_KEY ? "Loaded" : "Missing",
+    news: process.env.NEWS_API_KEY ? "Loaded" : "Missing"
+  });
+});
