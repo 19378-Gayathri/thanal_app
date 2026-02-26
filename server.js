@@ -11,8 +11,6 @@ app.get("/", (req,res)=>{
   res.send("Backend running ✅");
 });
 
-const axios = require('axios');
-
 app.post("/chat", async (req,res)=>{
 
   try {

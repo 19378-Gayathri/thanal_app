@@ -37,6 +37,7 @@ dependencies:
   url_launcher: ^6.2.5
   flutter_map: ^6.1.0
   latlong2: ^0.9.0
+  axios: ^1.x.x
   
 flutter:
   uses-material-design: true
