@@ -14,67 +14,87 @@ app.get("/", (req,res)=>{
 const axios = require('axios');
 
 app.post("/chat", async (req,res)=>{
+
   try {
 
     const userMessage = req.body.message;
 
-    const openrouterKey = process.env.OPENROUTER_API_KEY;
+    const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
-    const response = await axios.post(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
         model: "mistralai/mistral-7b-instruct",
         messages: [
           { role: "user", content: userMessage }
         ]
-      },
-      {
-        headers: {
-          "Authorization": `Bearer ${openrouterKey}`,
-          "Content-Type": "application/json"
-        }
-      }
-    );
+      })
+    });
 
-    const reply = response.data.choices[0].message.content;
+    const data = await response.json();
 
-    res.json({ reply });
+    const botReply = data.choices?.[0]?.message?.content || "No response";
 
-  } catch(err){
-    console.error(err.response?.data || err.message);
-    res.status(500).json({ reply: "Chatbot error ❌" });
+    res.json({ reply: botReply });
+
+  } catch (err) {
+    console.log(err);
+    res.json({ reply: "Error from AI server" });
   }
+
 });
 app.get("/weather/:city", async (req,res)=>{
+
   try {
 
     const city = req.params.city;
-    const weatherKey = process.env.WEATHER_API_KEY;
 
-    const response = await axios.get(
-      `http://api.weatherapi.com/v1/current.json?key=${weatherKey}&q=${city}`
+    const response = await fetch(
+      `http://api.weatherapi.com/v1/current.json?key=${process.env.WEATHER_API_KEY}&q=${city}`
     );
 
-    res.json(response.data);
+    const data = await response.json();
 
-  } catch(err){
-    res.status(500).json({ error: "Weather fetch failed" });
+    res.json({
+      location: data.location.name,
+      temp: data.current.temp_c,
+      condition: data.current.condition.text,
+      wind: data.current.wind_kph
+    });
+
+  } catch (err) {
+    console.log(err);
+    res.json({ error: "Weather fetch failed" });
   }
+
 });
 app.get("/news", async (req,res)=>{
+
   try {
 
-    const newsKey = process.env.NEWS_API_KEY;
-
-    const response = await axios.get(
-      `https://newsapi.org/v2/top-headlines?country=in&apiKey=${newsKey}`
+    const response = await fetch(
+      `https://newsapi.org/v2/everything?q=disaster OR flood OR earthquake OR cyclone&sortBy=publishedAt&apiKey=${process.env.NEWS_API_KEY}`
     );
 
-    res.json(response.data);
+    const data = await response.json();
 
-  } catch(err){
-    res.status(500).json({ error: "News fetch failed" });
+    const articles = data.articles.slice(0,5).map(article => ({
+      title: article.title,
+      source: article.source.name,
+      url: article.url
+    }));
+
+    res.json(articles);
+
+  } catch (err) {
+    console.log(err);
+    res.json({ error: "News fetch failed" });
   }
+
 });
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, ()=>{
