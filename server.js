@@ -2,27 +2,27 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-app.get("/", (req,res)=>{
-  res.send("Backend running ✅");
-});
+// 👇 Serve Flutter Web from frontend folder
+app.use(express.static(path.join(__dirname, "frontend")));
 
-app.post("/chat", async (req,res)=>{
 
+// ================== 🤖 CHAT API ==================
+app.post("/chat", async (req, res) => {
   try {
 
     const userMessage = req.body.message;
 
-    const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
@@ -34,19 +34,19 @@ app.post("/chat", async (req,res)=>{
     });
 
     const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || "No response";
 
-    const botReply = data.choices?.[0]?.message?.content || "No response";
-
-    res.json({ reply: botReply });
+    res.json({ reply });
 
   } catch (err) {
     console.log(err);
-    res.json({ reply: "Error from AI server" });
+    res.json({ reply: "AI Error" });
   }
-
 });
-app.get("/weather/:city", async (req,res)=>{
 
+
+// ================== 🌦 WEATHER ==================
+app.get("/weather/:city", async (req, res) => {
   try {
 
     const city = req.params.city;
@@ -66,12 +66,13 @@ app.get("/weather/:city", async (req,res)=>{
 
   } catch (err) {
     console.log(err);
-    res.json({ error: "Weather fetch failed" });
+    res.json({ error: "Weather failed" });
   }
-
 });
-app.get("/news", async (req,res)=>{
 
+
+// ================== 📰 NEWS ==================
+app.get("/news", async (req, res) => {
   try {
 
     const response = await fetch(
@@ -90,18 +91,19 @@ app.get("/news", async (req,res)=>{
 
   } catch (err) {
     console.log(err);
-    res.json({ error: "News fetch failed" });
+    res.json({ error: "News failed" });
   }
+});
 
+
+// ================== 🌍 LOAD FLUTTER UI ==================
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend", "index.html"));
 });
+
+
+// ================== 🚀 START SERVER ==================
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, ()=>{
+app.listen(PORT, () => {
   console.log("Server running on port " + PORT);
-});
-app.get("/check-env", (req,res)=>{
-  res.json({
-    openrouter: process.env.OPENROUTER_API_KEY ? "Loaded" : "Missing",
-    weather: process.env.WEATHER_API_KEY ? "Loaded" : "Missing",
-    news: process.env.NEWS_API_KEY ? "Loaded" : "Missing"
-  });
 });
